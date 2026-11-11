@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { LimitGauge } from "./LimitGauge";
-import { USING_FAKE_ENGINE, createEngineWorker } from "@/lib/engines";
+import { createEngineWorker, isFakeEngine } from "@/lib/engines";
 import {
   EngineCancelled,
   EngineError,
@@ -27,12 +27,29 @@ type ToolShellProps = {
 type Phase =
   | { name: "idle" }
   | { name: "picked"; file: File; note?: string }
-  | { name: "working"; file: File; progress: number }
-  | { name: "done"; file: File; size: number; fileName: string; url: string }
+  | { name: "working"; file: File; progress: number; note?: string }
+  | {
+      name: "done";
+      file: File;
+      size: number;
+      fileName: string;
+      url: string;
+      details: string[];
+      seconds: number;
+    }
   // `file` is kept when trying again with the same file makes sense.
   | { name: "error"; message: string; hint: string; file?: File };
 
 type Problem = { message: string; hint: string };
+
+// Phones get a lower cap. Long jobs drain the battery and the browser may
+// stop a tab that works for too long.
+function isPhone(): boolean {
+  return (
+    window.matchMedia("(pointer: coarse)").matches &&
+    Math.min(window.screen.width, window.screen.height) < 820
+  );
+}
 
 function checkFile(file: File, input: FileInput): Problem | null {
   const name = file.name.toLowerCase();
@@ -51,13 +68,23 @@ function checkFile(file: File, input: FileInput): Problem | null {
       hint: "It may not have finished downloading or saving. Choose a different file.",
     };
   }
-  if (file.size > input.maxBytes) {
+  const phone = isPhone() && input.maxBytesPhone !== undefined;
+  const cap = phone ? (input.maxBytesPhone as number) : input.maxBytes;
+  if (file.size > cap) {
     return {
-      message: `That file is ${formatBytes(file.size)}. This tool takes files up to ${formatBytes(input.maxBytes)}.`,
-      hint: "The work happens in your browser's memory, so very large files can crash the tab. Choose a smaller file.",
+      message: `That file is ${formatBytes(file.size)}. This tool takes files up to ${formatBytes(cap)}${phone ? " on a phone" : ""}.`,
+      hint: phone
+        ? "Larger files take too long on a phone and the browser may stop the tab. Use a computer for this file, or choose a smaller one."
+        : "Larger files take too long to process in a browser. Trim the video first, or choose a smaller file.",
     };
   }
   return null;
+}
+
+function formatSeconds(seconds: number): string {
+  if (seconds < 60) return `${Math.max(1, Math.round(seconds))} seconds`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes} min ${Math.round(seconds - minutes * 60)} s`;
 }
 
 function typeLabel(file: File): string {
@@ -126,23 +153,34 @@ export function ToolShell({
   function start(file: File) {
     const fakeFail =
       new URLSearchParams(window.location.search).get("fake") === "fail";
+    const startedAt = performance.now();
     setPhase({ name: "working", file, progress: 0 });
     const run = runEngine(
       () => createEngineWorker(engine),
       file,
       { targetBytes, fakeFail },
-      (value) =>
+      (value, note) =>
         setPhase((current) =>
-          current.name === "working" ? { ...current, progress: value } : current,
+          current.name === "working"
+            ? { ...current, progress: value, note }
+            : current,
         ),
     );
     runRef.current = run;
     run.result
-      .then(({ blob, fileName }) => {
+      .then(({ blob, fileName, details }) => {
         clearResultUrl();
         const url = URL.createObjectURL(blob);
         urlRef.current = url;
-        setPhase({ name: "done", file, size: blob.size, fileName, url });
+        setPhase({
+          name: "done",
+          file,
+          size: blob.size,
+          fileName,
+          url,
+          details,
+          seconds: (performance.now() - startedAt) / 1000,
+        });
       })
       .catch((error: unknown) => {
         if (error instanceof EngineCancelled) {
@@ -214,7 +252,7 @@ export function ToolShell({
   if (phase.name === "picked") {
     status = `${phase.file.name} picked. ${formatBytes(phase.file.size)}.`;
   } else if (phase.name === "working") {
-    status = "Working.";
+    status = phase.note ? `${phase.note}.` : "Working.";
   } else if (phase.name === "done") {
     status = `Done. The result is ${formatBytes(phase.size)}.`;
   } else if (phase.name === "error") {
@@ -285,8 +323,9 @@ export function ToolShell({
             </div>
             <p className="mt-3">Or drop a file here. You can also paste one.</p>
             <p className="mt-1 text-sm text-muted">
-              Files up to {formatBytes(input.maxBytes)}. The cap is there
-              because your browser does the work in its own memory.
+              {input.maxBytesPhone !== undefined
+                ? `Files up to ${formatBytes(input.maxBytes)} on a computer and ${formatBytes(input.maxBytesPhone)} on a phone. Larger files take too long to process in a browser.`
+                : `Files up to ${formatBytes(input.maxBytes)}. Larger files take too long to process in a browser.`}
             </p>
           </>
         )}
@@ -358,7 +397,7 @@ export function ToolShell({
         {phase.name === "working" && (
           <>
             <p className="mt-4">
-              Working: {Math.round(phase.progress * 100)}%
+              {phase.note ?? "Working"}: {Math.round(phase.progress * 100)}%
             </p>
             <div
               role="progressbar"
@@ -408,11 +447,11 @@ export function ToolShell({
                   target. Try a larger target or a shorter file.
                 </p>
               ))}
-            {USING_FAKE_ENGINE && (
-              <p className="mt-1 text-sm text-muted">
-                Test engine: it waits 3 seconds and returns the same file.
-              </p>
-            )}
+            <p className="mt-1 text-sm text-muted">
+              {isFakeEngine(engine)
+                ? "Test engine: it waits 3 seconds and returns the same file."
+                : [...phase.details, `Took ${formatSeconds(phase.seconds)}.`].join(" ")}
+            </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <a
                 href={phase.url}

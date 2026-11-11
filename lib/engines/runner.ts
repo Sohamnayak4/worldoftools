@@ -33,7 +33,7 @@ export function runEngine(
   createWorker: () => Worker,
   file: File,
   options: EngineOptions,
-  onProgress: (value: number) => void,
+  onProgress: (value: number, note?: string) => void,
 ): EngineRun {
   let worker: Worker | null = null;
   let settle: ((error: Error) => void) | null = null;
@@ -64,10 +64,14 @@ export function runEngine(
     worker.onmessage = (event: MessageEvent<EngineMessage>) => {
       const message = event.data;
       if (message.type === "progress") {
-        onProgress(Math.max(0, Math.min(1, message.value)));
+        onProgress(Math.max(0, Math.min(1, message.value)), message.note);
       } else if (message.type === "done") {
         finish();
-        resolve({ blob: message.blob, fileName: message.fileName });
+        resolve({
+          blob: message.blob,
+          fileName: message.fileName,
+          details: message.details ?? [],
+        });
       } else if (message.type === "error") {
         settle?.(new EngineError(message.message, message.hint));
       }

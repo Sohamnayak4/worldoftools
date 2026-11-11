@@ -1,12 +1,18 @@
 import type { Engine } from "../tools";
 
-// Until the real engines are built, every tool runs the fake engine.
-export const USING_FAKE_ENGINE = true;
+// Engines that are built. The rest still run the fake engine.
+export function isFakeEngine(engine: Engine): boolean {
+  return engine !== "video";
+}
 
-// The worker script is its own chunk. The browser only downloads it when
+// Each worker script is its own chunk. The browser only downloads it when
 // this function runs, which is after the visitor picks a file and starts.
 export function createEngineWorker(engine: Engine): Worker {
-  void engine;
+  if (engine === "video") {
+    return new Worker(new URL("./video.worker.ts", import.meta.url), {
+      type: "module",
+    });
+  }
   return new Worker(new URL("./fake.worker.ts", import.meta.url), {
     type: "module",
   });

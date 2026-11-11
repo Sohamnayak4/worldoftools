@@ -14,10 +14,15 @@ export type EngineRequest = {
 };
 
 export type EngineMessage =
-  // `value` runs from 0 to 1.
-  | { type: "progress"; value: number }
-  | { type: "done"; blob: Blob; fileName: string }
+  // `value` runs from 0 to 1. `note` is a short line about the current step.
+  | { type: "progress"; value: number; note?: string }
+  // `details` are short plain lines about what was done to the file.
+  | { type: "done"; blob: Blob; fileName: string; details?: string[] }
   // `message` says what went wrong. `hint` says what to do next.
   | { type: "error"; message: string; hint: string };
 
-export type EngineResult = { blob: Blob; fileName: string };
+export type EngineResult = {
+  blob: Blob;
+  fileName: string;
+  details: string[];
+};

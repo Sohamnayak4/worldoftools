@@ -73,6 +73,8 @@ export type FileInput = {
   examples: string;
   // Largest file the tool takes. Explained in plain words in the UI.
   maxBytes: number;
+  // Lower cap for phones, when the tool needs one.
+  maxBytesPhone?: number;
 };
 
 export type Tool = {
@@ -114,8 +116,9 @@ export const tools: Tool[] = [
       extensions: [".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"],
       noun: "video",
       examples: "MP4 or MOV",
-      // Provisional. Step 3 sets the real cap per device.
-      maxBytes: 500 * MB,
+      // The file is read in a stream, so the cap is about time, not memory.
+      maxBytes: 2000 * MB,
+      maxBytesPhone: 1000 * MB,
     },
     actionLabel: "Compress video",
     primaryKeyword: "compress video to specific size",
@@ -144,8 +147,19 @@ export const tools: Tool[] = [
       { label: "Default target", value: "10 MB. You can type any size" },
       { label: "Account", value: "Not needed" },
       {
-        label: "Supported formats and max file size",
-        value: "Set in step 3, when the video engine is tested on real phones",
+        label: "Input formats",
+        value:
+          "MP4, MOV, WebM and MKV, when your browser can decode the video inside",
+      },
+      { label: "Output format", value: "MP4 with H.264 video and AAC sound" },
+      {
+        label: "Max file size",
+        value: "2 GB on a computer, 1 GB on a phone",
+      },
+      {
+        label: "Browsers",
+        value:
+          "Chrome and Edge 94 or later, Safari 16.4 or later, Firefox 130 or later on a computer",
       },
     ],
     faqs: [
