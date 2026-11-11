@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* Design tokens. Dark is the default theme for everyone. */
+:root,
+[data-theme="dark"] {
+  --bg: #16181d;
+  --surface: #1e2128;
+  --line: #2c3038;
+  --text: #e8e6e1;
+  --muted: #9a9fa8;
+  --accent: #f2b84b;
+  --accent-ink: #f2b84b;
+  --on-accent: #16181d;
+  --over: #e5604d;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f6f4ef;
+  --surface: #ece9e2;
+  --line: #d5d1c8;
+  --text: #1b1d22;
+  --muted: #5a5f69;
+  --accent: #f2b84b;
+  --accent-ink: #7a5200;
+  --on-accent: #16181d;
+  --over: #b93a28;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-over: var(--over);
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-bricolage), var(--font-hanken), ui-sans-serif, sans-serif;
+  --radius-ctl: 6px;
+}
+
+/* Base styles sit in the base layer so utility classes can override them. */
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    line-height: 1.2;
+  }
+
+  a {
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+  }
+
+  a:hover {
+    color: var(--accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
+}
+
+/* Theme toggle label. Both labels are in the HTML, CSS shows one. */
+[data-theme="dark"] .when-light,
+[data-theme="light"] .when-dark {
+  display: none;
+}
+
+/* The gauge bar is the only animated thing on the site. */
+.gauge-bar {
+  transition: width 600ms ease-out, background-color 200ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge-bar {
+    transition: none;
+  }
+}
