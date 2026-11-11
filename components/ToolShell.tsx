@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { LimitGauge } from "./LimitGauge";
+import { TrimFields, type TrimRange } from "./TrimFields";
 import { createEngineWorker, isFakeEngine } from "@/lib/engines";
 import {
   EngineCancelled,
@@ -10,7 +11,8 @@ import {
   runEngine,
 } from "@/lib/engines/runner";
 import { KB, MB, formatBytes } from "@/lib/format";
-import type { Engine, FileInput } from "@/lib/tools";
+import type { EngineJob } from "@/lib/engines/types";
+import type { Engine, FileInput, Preset, ToolOption } from "@/lib/tools";
 
 // The shared shell every file tool uses: pick a file, see it against the
 // limit, run the engine in a worker, then download the result.
@@ -19,14 +21,18 @@ type ToolShellProps = {
   engine: Engine;
   input: FileInput;
   actionLabel: string;
-  // Set for target-size tools. The gauge and the fit check use it.
-  presetTargetBytes?: number;
-  userCanSetTarget: boolean;
+  // What the tool does. Target-size presets also drive the gauge.
+  preset: Preset;
+  // Dropdowns shown after a file is picked.
+  options?: ToolOption[];
+  // Set when the visitor picks a start and end with a preview player.
+  range?: { media: "video" | "audio" };
 };
 
 type Phase =
   | { name: "idle" }
-  | { name: "picked"; file: File; note?: string }
+  // `previewUrl` is set for tools that show the video, like trim.
+  | { name: "picked"; file: File; note?: string; previewUrl?: string }
   | { name: "working"; file: File; progress: number; note?: string }
   | {
       name: "done";
@@ -58,8 +64,8 @@ function checkFile(file: File, input: FileInput): Problem | null {
     input.extensions.some((extension) => name.endsWith(extension));
   if (!typeOk) {
     return {
-      message: `That file is not a ${input.noun}.`,
-      hint: `Choose a ${input.noun} file, such as ${input.examples}.`,
+      message: `That file is not ${input.article} ${input.noun}.`,
+      hint: `Choose ${input.article} ${input.noun}, such as ${input.examples}.`,
     };
   }
   if (file.size === 0) {
@@ -75,14 +81,15 @@ function checkFile(file: File, input: FileInput): Problem | null {
       message: `That file is ${formatBytes(file.size)}. This tool takes files up to ${formatBytes(cap)}${phone ? " on a phone" : ""}.`,
       hint: phone
         ? "Larger files take too long on a phone and the browser may stop the tab. Use a computer for this file, or choose a smaller one."
-        : "Larger files take too long to process in a browser. Trim the video first, or choose a smaller file.",
+        : "Larger files take too long to process in a browser. Choose a smaller file.",
     };
   }
   return null;
 }
 
 function formatSeconds(seconds: number): string {
-  if (seconds < 60) return `${Math.max(1, Math.round(seconds))} seconds`;
+  if (seconds < 1.5) return "1 second";
+  if (seconds < 60) return `${Math.round(seconds)} seconds`;
   const minutes = Math.floor(seconds / 60);
   return `${minutes} min ${Math.round(seconds - minutes * 60)} s`;
 }
@@ -101,9 +108,15 @@ export function ToolShell({
   engine,
   input,
   actionLabel,
-  presetTargetBytes,
-  userCanSetTarget,
+  preset,
+  options = [],
+  range,
 }: ToolShellProps) {
+  const presetTargetBytes =
+    preset.kind === "target-size" ? preset.targetBytes : undefined;
+  const userCanSetTarget =
+    preset.kind === "target-size" && preset.userCanSetTarget;
+  const wantsTrim = range !== undefined;
   const hasTarget = presetTargetBytes !== undefined;
   const unit = (presetTargetBytes ?? MB) >= MB ? MB : KB;
   const unitLabel = unit === MB ? "MB" : "KB";
@@ -113,14 +126,20 @@ export function ToolShell({
     hasTarget ? String(presetTargetBytes / unit) : "",
   );
   const [dragOver, setDragOver] = useState(false);
+  const [trim, setTrim] = useState<TrimRange | null>(null);
+  const [settings, setSettings] = useState<Record<string, string>>(() =>
+    Object.fromEntries(options.map((option) => [option.id, option.defaultValue])),
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const runRef = useRef<EngineRun | null>(null);
   const urlRef = useRef<string | null>(null);
+  const previewRef = useRef<string | null>(null);
   const firstRender = useRef(true);
   const targetId = useId();
   const targetErrorId = useId();
+  const optionId = useId();
 
   const targetNumber = Number(targetText.replace(",", "."));
   const targetValid =
@@ -134,9 +153,25 @@ export function ToolShell({
       ? Math.round(targetNumber * unit)
       : presetTargetBytes;
 
+  function clearPreview() {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = null;
+  }
+
   function pickFile(file: File) {
+    clearPreview();
+    setTrim(null);
     const problem = checkFile(file, input);
-    setPhase(problem ? { name: "error", ...problem } : { name: "picked", file });
+    if (problem) {
+      setPhase({ name: "error", ...problem });
+      return;
+    }
+    if (wantsTrim) previewRef.current = URL.createObjectURL(file);
+    setPhase({
+      name: "picked",
+      file,
+      previewUrl: previewRef.current ?? undefined,
+    });
   }
 
   function clearResultUrl() {
@@ -146,6 +181,8 @@ export function ToolShell({
 
   function startOver() {
     clearResultUrl();
+    clearPreview();
+    setTrim(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setPhase({ name: "idle" });
   }
@@ -153,12 +190,20 @@ export function ToolShell({
   function start(file: File) {
     const fakeFail =
       new URLSearchParams(window.location.search).get("fake") === "fail";
+    const job: EngineJob = {
+      preset,
+      targetBytes,
+      range: trim ?? undefined,
+      settings,
+      fakeFail,
+    };
+    const previewUrl = previewRef.current ?? undefined;
     const startedAt = performance.now();
     setPhase({ name: "working", file, progress: 0 });
     const run = runEngine(
       () => createEngineWorker(engine),
       file,
-      { targetBytes, fakeFail },
+      job,
       (value, note) =>
         setPhase((current) =>
           current.name === "working"
@@ -188,6 +233,7 @@ export function ToolShell({
             name: "picked",
             file,
             note: "Cancelled. Your file was not changed.",
+            previewUrl,
           });
         } else if (error instanceof EngineError) {
           setPhase({
@@ -210,6 +256,12 @@ export function ToolShell({
       });
   }
 
+  // The paste listener calls the latest pickFile through this ref.
+  const pickFileRef = useRef(pickFile);
+  useEffect(() => {
+    pickFileRef.current = pickFile;
+  });
+
   // Paste a file from the clipboard while no file is picked.
   useEffect(() => {
     if (phase.name !== "idle") return;
@@ -217,14 +269,11 @@ export function ToolShell({
       const file = event.clipboardData?.files[0];
       if (!file) return;
       event.preventDefault();
-      const problem = checkFile(file, input);
-      setPhase(
-        problem ? { name: "error", ...problem } : { name: "picked", file },
-      );
+      pickFileRef.current(file);
     }
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
-  }, [phase.name, input]);
+  }, [phase.name]);
 
   // Move keyboard focus to the panel when its content changes, so the next
   // action is one Tab away.
@@ -241,8 +290,19 @@ export function ToolShell({
     return () => {
       runRef.current?.cancel();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     };
   }, []);
+
+  // Fixed heights per layout, so nothing below the tool moves between steps.
+  let panelHeight = "min-h-[332px]";
+  if (range?.media === "video") {
+    panelHeight = options.length > 0 ? "min-h-[680px]" : "min-h-[520px]";
+  } else if (range?.media === "audio") {
+    panelHeight = "min-h-[410px]";
+  } else if (options.length > 0) {
+    panelHeight = "min-h-[360px]";
+  }
 
   const canDrop = phase.name !== "working";
   const file = "file" in phase ? phase.file : undefined;
@@ -306,7 +366,7 @@ export function ToolShell({
             pickFile(dropped);
           }
         }}
-        className={`flex min-h-[332px] flex-col justify-center rounded-ctl border bg-surface p-4 ${
+        className={`flex ${panelHeight} flex-col justify-center rounded-ctl border bg-surface p-4 ${
           dragOver ? "border-accent-ink" : "border-line"
         }`}
       >
@@ -366,6 +426,41 @@ export function ToolShell({
                 )}
               </div>
             )}
+            {wantsTrim && phase.previewUrl && (
+              <TrimFields
+                key={phase.previewUrl}
+                url={phase.previewUrl}
+                media={range?.media ?? "video"}
+                onChange={setTrim}
+              />
+            )}
+            {options.map((option) => (
+              <div key={option.id} className="mt-3">
+                <label
+                  htmlFor={`${optionId}-${option.id}`}
+                  className="block text-sm text-muted"
+                >
+                  {option.label}
+                </label>
+                <select
+                  id={`${optionId}-${option.id}`}
+                  value={settings[option.id] ?? option.defaultValue}
+                  onChange={(event) =>
+                    setSettings((current) => ({
+                      ...current,
+                      [option.id]: event.target.value,
+                    }))
+                  }
+                  className="mt-1 w-full max-w-xs rounded-ctl border border-line bg-bg px-3 py-2 text-base"
+                >
+                  {option.choices.map((choice) => (
+                    <option key={choice.value} value={choice.value}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ))}
             {targetBytes !== undefined && targetValid && (
               <p className="mt-3 text-sm text-muted">
                 {phase.file.size > targetBytes
@@ -378,7 +473,7 @@ export function ToolShell({
               <button
                 type="button"
                 className={primaryButton}
-                disabled={!targetValid}
+                disabled={!targetValid || (wantsTrim && trim === null)}
                 onClick={() => start(phase.file)}
               >
                 {actionLabel}

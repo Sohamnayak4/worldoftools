@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mediabunny/mp3-encoder": "^1.65.2",
+    "gifenc": "^1.0.3",
+    "gifuct-js": "^2.1.2",
     "mediabunny": "^1.65.2",
     "next": "16.4.6",
     "react": "19.3.0",

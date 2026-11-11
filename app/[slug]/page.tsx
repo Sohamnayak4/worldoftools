@@ -49,11 +49,9 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
             engine={tool.engine}
             input={tool.input}
             actionLabel={tool.actionLabel}
-            presetTargetBytes={limitBytes}
-            userCanSetTarget={
-              tool.preset.kind === "target-size" &&
-              tool.preset.userCanSetTarget
-            }
+            preset={tool.preset}
+            options={tool.options}
+            range={tool.range}
           />
         ) : (
           limitBytes !== undefined && <LimitGauge limitBytes={limitBytes} />

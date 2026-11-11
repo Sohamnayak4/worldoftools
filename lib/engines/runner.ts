@@ -1,6 +1,6 @@
 import type {
+  EngineJob,
   EngineMessage,
-  EngineOptions,
   EngineRequest,
   EngineResult,
 } from "./types";
@@ -32,7 +32,7 @@ export type EngineRun = {
 export function runEngine(
   createWorker: () => Worker,
   file: File,
-  options: EngineOptions,
+  job: EngineJob,
   onProgress: (value: number, note?: string) => void,
 ): EngineRun {
   let worker: Worker | null = null;
@@ -91,7 +91,7 @@ export function runEngine(
       );
     };
 
-    const request: EngineRequest = { type: "start", file, options };
+    const request: EngineRequest = { type: "start", file, job };
     worker.postMessage(request);
   });
 

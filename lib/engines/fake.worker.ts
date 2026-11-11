@@ -7,11 +7,12 @@ const post = (message: EngineMessage) => self.postMessage(message);
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
 self.onmessage = async (event: MessageEvent<EngineRequest>) => {
-  const { file, options } = event.data;
+  const { file, job } = event.data;
+  const fail = job.fakeFail === true;
   const steps = 30;
   for (let step = 1; step <= steps; step++) {
     await sleep(100);
-    if (options.fakeFail && step === steps / 2) {
+    if (fail && step === steps / 2) {
       post({
         type: "error",
         message: "The test engine failed on purpose.",
