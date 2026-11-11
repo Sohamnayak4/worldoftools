@@ -7,16 +7,19 @@ import { KB, MB, formatBytes } from "@/lib/format";
 type LimitGaugeProps = {
   limitBytes: number;
   sizeBytes?: number;
+  // Size the ruler is scaled to. Pass the original file size so the ticks
+  // stay still while the bar moves to the result size.
+  scaleBytes?: number;
 };
 
 const NICE_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
 
-function buildScale(limitBytes: number, sizeBytes?: number) {
+function buildScale(limitBytes: number, sizeBytes: number) {
   const unit = limitBytes >= MB ? MB : KB;
   const unitLabel = unit === MB ? "MB" : "KB";
-  const needed = Math.max(limitBytes * 2.5, (sizeBytes ?? 0) * 1.1) / unit;
+  const needed = Math.max(limitBytes * 2.5, sizeBytes * 1.1) / unit;
   const major =
-    NICE_STEPS.find((step) => needed / step <= 6) ??
+    NICE_STEPS.find((step) => needed / step <= 5) ??
     NICE_STEPS[NICE_STEPS.length - 1];
   const max = Math.ceil(needed / major) * major;
   const minor = major / 5;
@@ -27,8 +30,15 @@ function buildScale(limitBytes: number, sizeBytes?: number) {
   return { unit, unitLabel, max, ticks };
 }
 
-export function LimitGauge({ limitBytes, sizeBytes }: LimitGaugeProps) {
-  const { unit, unitLabel, max, ticks } = buildScale(limitBytes, sizeBytes);
+export function LimitGauge({
+  limitBytes,
+  sizeBytes,
+  scaleBytes,
+}: LimitGaugeProps) {
+  const { unit, unitLabel, max, ticks } = buildScale(
+    limitBytes,
+    Math.max(sizeBytes ?? 0, scaleBytes ?? 0),
+  );
   const pct = (bytes: number) => Math.min(100, (bytes / (max * unit)) * 100);
   const hasFile = sizeBytes !== undefined;
   const over = hasFile && sizeBytes > limitBytes;

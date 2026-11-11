@@ -59,11 +59,30 @@ export type Fact = {
 
 export type Faq = { q: string; a: string };
 
+// What files the tool takes. Tools with no upload leave this out.
+export type FileInput = {
+  // Value for the file picker's `accept` attribute.
+  accept: string;
+  // A file passes if its type starts with one of these, or its name ends
+  // with one of the extensions. Some phones report no type at all.
+  mimePrefixes: string[];
+  extensions: string[];
+  // Used in copy: "Choose video", "That file is not a video".
+  noun: string;
+  // Examples for the error message: "MP4 or MOV".
+  examples: string;
+  // Largest file the tool takes. Explained in plain words in the UI.
+  maxBytes: number;
+};
+
 export type Tool = {
   slug: string;
   category: Category;
   engine: Engine;
   preset: Preset;
+  input?: FileInput;
+  // The main button says what happens: "Compress video".
+  actionLabel: string;
   primaryKeyword: string;
   secondaryKeywords: string[];
   title: string;
@@ -89,6 +108,16 @@ export const tools: Tool[] = [
       targetBytes: 10 * MB,
       userCanSetTarget: true,
     },
+    input: {
+      accept: "video/*",
+      mimePrefixes: ["video/"],
+      extensions: [".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi"],
+      noun: "video",
+      examples: "MP4 or MOV",
+      // Provisional. Step 3 sets the real cap per device.
+      maxBytes: 500 * MB,
+    },
+    actionLabel: "Compress video",
     primaryKeyword: "compress video to specific size",
     secondaryKeywords: [
       "compress video to 10mb",

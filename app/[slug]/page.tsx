@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdSlot } from "@/components/AdSlot";
 import { LimitGauge } from "@/components/LimitGauge";
-import { ToolPlaceholder } from "@/components/ToolPlaceholder";
+import { ToolShell } from "@/components/ToolShell";
 import { SITE_PROMISE } from "@/lib/site";
 import { getRelatedTools, getTool, tools } from "@/lib/tools";
 
@@ -44,11 +44,19 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
       <p className="mt-1 text-sm text-muted">{SITE_PROMISE}</p>
 
       <div className="mt-5">
-        <ToolPlaceholder />
-        {limitBytes !== undefined && (
-          <div className="mt-4">
-            <LimitGauge limitBytes={limitBytes} />
-          </div>
+        {tool.input ? (
+          <ToolShell
+            engine={tool.engine}
+            input={tool.input}
+            actionLabel={tool.actionLabel}
+            presetTargetBytes={limitBytes}
+            userCanSetTarget={
+              tool.preset.kind === "target-size" &&
+              tool.preset.userCanSetTarget
+            }
+          />
+        ) : (
+          limitBytes !== undefined && <LimitGauge limitBytes={limitBytes} />
         )}
       </div>
 
