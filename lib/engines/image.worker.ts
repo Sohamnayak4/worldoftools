@@ -635,6 +635,17 @@ async function run(
   }
 }
 
+// A crash outside the job's own error handling would otherwise leave the
+// page waiting with no message.
+self.addEventListener("unhandledrejection", (event) => {
+  const reason: unknown = event.reason;
+  post({
+    type: "error",
+    message: "The tool stopped because of an unexpected problem.",
+    hint: `Reload the page and try again. Technical detail: ${reason instanceof Error ? reason.message : String(reason)}`,
+  });
+});
+
 self.onmessage = (event: MessageEvent<EngineRequest>) => {
   const { file, files, job, bitmap } = event.data;
   run(file, files ?? [file], job, bitmap).catch((error: unknown) => {

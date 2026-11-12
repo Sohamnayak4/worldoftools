@@ -8,6 +8,8 @@ import type {
 // Runs one job in a Web Worker so the page never freezes.
 // Each job gets a fresh worker. Cancel stops the worker at once.
 
+const START_TIMEOUT_MS = 20_000;
+
 export class EngineError extends Error {
   hint: string;
   constructor(message: string, hint: string) {
@@ -39,9 +41,15 @@ export function runEngine(
 ): EngineRun {
   let worker: Worker | null = null;
   let settle: ((error: Error) => void) | null = null;
+  // Every engine reports as soon as it starts. If nothing arrives in this
+  // time, the worker script failed to load or crashed while starting, which
+  // browsers do not always report. Without this the page would wait forever.
+  let startTimer: ReturnType<typeof setTimeout> | null = null;
 
   const result = new Promise<EngineResult>((resolve, reject) => {
     const finish = () => {
+      if (startTimer) clearTimeout(startTimer);
+      startTimer = null;
       worker?.terminate();
       worker = null;
       settle = null;
@@ -65,6 +73,8 @@ export function runEngine(
 
     worker.onmessage = (event: MessageEvent<EngineMessage>) => {
       const message = event.data;
+      if (startTimer) clearTimeout(startTimer);
+      startTimer = null;
       if (message.type === "progress") {
         onProgress(Math.max(0, Math.min(1, message.value)), message.note);
       } else if (message.type === "done") {
@@ -96,6 +106,18 @@ export function runEngine(
     const request: EngineRequest = { type: "start", file, files, job, bitmap };
     // The decoded picture is handed over, not copied.
     worker.postMessage(request, bitmap ? [bitmap] : []);
+    startTimer = setTimeout(() => {
+      settle?.(
+        new EngineError(
+          navigator.onLine
+            ? "The tool did not start."
+            : "The tool could not load because you are offline.",
+          navigator.onLine
+            ? "Reload the page and try again. If it keeps happening, try a different browser."
+            : "Check your connection and try again.",
+        ),
+      );
+    }, START_TIMEOUT_MS);
   });
 
   return {

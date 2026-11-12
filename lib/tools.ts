@@ -94,6 +94,9 @@ export type FileInput = {
   decodeWidth?: number;
   // True when the tool takes several files at once, in order.
   multiple?: boolean;
+  // A clearer message for one specific wrong file type that people often
+  // pick by mistake. Checked before the general wrong-type message.
+  commonMistake?: { mimePrefix: string; message: string; hint: string };
 };
 
 // A choice the visitor makes before starting, shown as a dropdown.
@@ -348,6 +351,11 @@ const HEIC_INPUT: FileInput = {
   noun: "HEIC photo",
   article: "a",
   examples: "a .heic photo from an iPhone",
+  commonMistake: {
+    mimePrefix: "image/jpeg",
+    message: "That photo is already a JPG, so there is nothing to convert.",
+    hint: "An iPhone usually hands websites a JPG copy when you pick from the photo library. To convert an original HEIC file, pick it from the Files app, or open this page on a computer.",
+  },
   ...IMAGE_CAPS,
 };
 

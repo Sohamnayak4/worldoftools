@@ -73,6 +73,15 @@ function checkFile(file: File, input: FileInput): Problem | null {
     input.mimePrefixes.some((prefix) => file.type.startsWith(prefix)) ||
     input.extensions.some((extension) => name.endsWith(extension));
   if (!typeOk) {
+    if (
+      input.commonMistake &&
+      file.type.startsWith(input.commonMistake.mimePrefix)
+    ) {
+      return {
+        message: input.commonMistake.message,
+        hint: input.commonMistake.hint,
+      };
+    }
     return {
       message: `That file is not ${input.article} ${input.noun}.`,
       hint: `Choose ${input.article} ${input.noun}, such as ${input.examples}.`,
