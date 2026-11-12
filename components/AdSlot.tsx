@@ -1,8 +1,8 @@
-// Reserved ad position. Ads are out of scope for launch, so this renders
+// Reserved ad positions. Ads are not live yet, so every slot renders
 // nothing and takes no space. When ads are turned on, set `enabled` and the
 // slot holds `reservedHeight` from first paint so nothing shifts.
 type AdSlotProps = {
-  position: "below-tool" | "footer";
+  position: "below-tool" | "footer" | "sidebar" | "featured";
   reservedHeight?: number;
   enabled?: boolean;
 };

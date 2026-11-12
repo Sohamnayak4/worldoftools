@@ -8,8 +8,8 @@ import { LimitGauge } from "@/components/LimitGauge";
 import { ToolShell } from "@/components/ToolShell";
 import { UtilityTool } from "@/components/UtilityTool";
 import { isWidgetName } from "@/lib/widgets";
-import { SITE_PROMISE } from "@/lib/site";
 import { specsFor } from "@/lib/photoSpecs";
+import { stripFor } from "@/lib/strip";
 import {
   CATEGORIES,
   getCategory,
@@ -62,13 +62,11 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
     tool.preset.kind === "target-size" ? tool.preset.targetBytes : undefined;
 
   return (
-    <article className="max-w-[720px]">
+    <article className="mx-auto max-w-[880px]">
       <Breadcrumb trail={[{ href: `/${tool.category}`, label: getCategory(tool.category)?.h1 ?? "Tools" }]} />
       <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{tool.h1}</h1>
       <p className="mt-3 max-w-[65ch]">{tool.shortAnswer}</p>
-      <p className="mt-1 text-sm text-muted">{SITE_PROMISE}</p>
-
-      <div className="mt-5">
+      <div className="mt-6">
         {tool.preset.kind === "utility" && isWidgetName(tool.preset.widget) ? (
           <UtilityTool widget={tool.preset.widget} />
         ) : tool.input ? (
@@ -92,6 +90,15 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
           limitBytes !== undefined && <LimitGauge limitBytes={limitBytes} />
         )}
       </div>
+
+      <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+        {stripFor(tool).map((tile) => (
+          <li key={tile.title} className="rounded-ctl border border-line px-4 py-3">
+            <p className="font-semibold">{tile.title}</p>
+            <p className="text-sm text-muted">{tile.detail}</p>
+          </li>
+        ))}
+      </ul>
 
       <AdSlot position="below-tool" />
 

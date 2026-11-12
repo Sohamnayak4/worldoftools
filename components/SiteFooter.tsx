@@ -6,14 +6,14 @@ import { CATEGORIES } from "@/lib/tools";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto w-full max-w-[1040px] px-4 py-8 text-sm text-muted">
-        <AdSlot position="footer" />
+    <footer className="border-t border-line px-4 py-8 text-sm text-muted sm:px-6 lg:px-10">
+      <AdSlot position="footer" />
+      <div className="mx-auto max-w-[1120px]">
         <p className="flex items-center gap-2 text-text">
           <LogoMark size={18} />
           {SITE_PROMISE}
         </p>
-        <nav aria-label="Footer" className="mt-3 grid gap-4 sm:grid-cols-2">
+        <nav aria-label="Footer" className="mt-3 flex flex-wrap justify-between gap-4">
           <ul className="flex flex-wrap gap-x-4">
             <li>
               <Link href="/" className="inline-block py-1">
@@ -28,7 +28,7 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
-          <ul className="flex flex-wrap gap-x-4 sm:justify-end">
+          <ul className="flex flex-wrap gap-x-4">
             <li>
               <Link href="/about" className="inline-block py-1">
                 About

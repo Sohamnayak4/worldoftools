@@ -8,7 +8,7 @@ export function CategoryPage({ category }: { category: CategoryInfo }) {
   const list = toolsIn(category.id);
   const others = CATEGORIES.filter((item) => item.id !== category.id);
   return (
-    <article className="max-w-[720px]">
+    <article className="mx-auto max-w-[880px]">
       <Breadcrumb trail={[]} />
       <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{category.h1}</h1>
       <p className="mt-3 max-w-[65ch]">{category.intro}</p>

@@ -1,5 +1,5 @@
-// The site mark: a file bar stopping short of the limit line. Same shapes as
-// the favicon. The limit line uses the text color, so it works in both themes.
+// The site mark: a yellow square with one ruler tick. Same shapes as the
+// favicon. Fixed colors, so it reads the same in both themes.
 export function LogoMark({ size = 22 }: { size?: number }) {
   return (
     <svg
@@ -9,8 +9,8 @@ export function LogoMark({ size = 22 }: { size?: number }) {
       aria-hidden="true"
       className="shrink-0"
     >
-      <rect x="2" y="12" width="18" height="8" fill="var(--accent)" />
-      <rect x="23" y="5" width="3.5" height="22" fill="currentColor" />
+      <rect width="32" height="32" rx="5" fill="#F2B84B" />
+      <rect x="14.5" y="0" width="3" height="13" fill="#16181D" />
     </svg>
   );
 }

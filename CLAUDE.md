@@ -109,19 +109,30 @@ SIGNATURE ELEMENT: the limit gauge
   After processing it sits under the marker in --accent.
 - This is the only place with animation: the bar moving to its new size.
 
-LAYOUT
-- Left-aligned, single column, max width about 720px on tool pages.
-- The tool sits directly under the h1 and short answer, above the fold on mobile.
-- Homepage is the tool index itself: a search box and a plain grouped list of
-  tool names by category. No hero section, no marketing headline, no feature grid.
+LAYOUT (revised by the owner on 2026-11-12, after the first UI pass)
+- App shell: a left sidebar on wide screens with the logo, a Cmd K / Ctrl K
+  tool search, every category with its tool count and tools, and links to
+  About and Privacy. On phones the sidebar opens from a menu button.
+- Homepage: a short headline and line, a large search box, a "Start with"
+  row of featured tool tiles, then every tool grouped by category in
+  columns, each with its icon, name and one-line blurb.
+- Tool pages: the tool is centered, about 880px wide, directly under the
+  breadcrumb, h1 and short answer, above the fold on mobile. Under it, a
+  strip of three short fact tiles, then the page content.
 - Borders (1px, --line) separate things. No shadows.
-- Radius: 6px on buttons and inputs, 0 on the gauge. Nothing fully rounded.
+- Radius: 6px on buttons, inputs and tiles, 0 on the gauge. Nothing fully
+  rounded.
+- Ad spaces are reserved in the sidebar and above the homepage tool list.
+  They render nothing until ads are set up.
 
 DO NOT
 - No gradients, glow, blur, glassmorphism, or background patterns.
-- No grid of identical rounded cards. No card inside a card.
+- Bordered tiles only for the "Start with" row and the facts strip. No card
+  inside a card, and no tiles elsewhere.
 - No all-caps eyebrow labels above headings. No pills or badges for decoration.
-- No emoji or decorative icons. A small file-type label in text is enough.
+- No emoji. Icons (lucide-react, outline only) are allowed where they label
+  something: one per tool and one per category, plus functional icons on
+  controls such as search, menu and upload. No decorative icons.
 - No arrows appended to links or buttons.
 - No fade-in or slide-up on scroll. No hover effects beyond a color change.
 - No stock illustrations, no fake testimonials, no stats counters.

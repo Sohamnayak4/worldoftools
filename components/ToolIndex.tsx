@@ -1,44 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-
-export type ToolIndexItem = {
-  slug: string;
-  name: string;
-  blurb: string;
-  keywords: string;
-};
-
-export type ToolIndexGroup = {
-  id: string;
-  label: string;
-  items: ToolIndexItem[];
-};
+import { Search } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type NavCategory, matchTools } from "@/lib/nav";
 
 // The homepage tool list with a search box. The full list is in the
 // server-rendered HTML. Typing only hides rows that do not match.
-export function ToolIndex({ groups }: { groups: ToolIndexGroup[] }) {
+export function ToolIndex({
+  categories,
+  icons,
+  featured,
+}: {
+  categories: NavCategory[];
+  icons: Record<string, ReactNode>;
+  // Shown between the search box and the list while nothing is typed.
+  featured?: ReactNode;
+}) {
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const visible = groups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => {
-        const haystack = `${item.name} ${item.blurb} ${item.keywords}`.toLowerCase();
-        return words.every((word) => haystack.includes(word));
-      }),
-    }))
-    .filter((group) => group.items.length > 0);
-  const count = visible.reduce((sum, group) => sum + group.items.length, 0);
+  const visible = categories
+    .map((category) => ({ ...category, tools: matchTools(category.tools, query) }))
+    .filter((category) => category.tools.length > 0);
+  const count = visible.reduce((sum, category) => sum + category.tools.length, 0);
+  const searching = query.trim() !== "";
 
   // Press / anywhere to jump to the search box.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable=true]")) return;
+      if (target?.closest("input, textarea, select, dialog, [contenteditable=true]")) return;
       event.preventDefault();
       searchRef.current?.focus();
     }
@@ -48,45 +40,56 @@ export function ToolIndex({ groups }: { groups: ToolIndexGroup[] }) {
 
   return (
     <div>
-      <div className="max-w-[720px]">
-        <label htmlFor="tool-search" className="flex items-baseline justify-between text-sm text-muted">
-          <span>Search tools</span>
-          <span className="hidden sm:inline">Press / to search</span>
+      <div className="relative max-w-[640px]">
+        <label htmlFor="tool-search" className="sr-only">
+          Search tools
         </label>
+        <Search
+          size={20}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted"
+        />
         <input
           ref={searchRef}
           id="tool-search"
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="compress video for discord, heic to jpg, merge pdf"
+          placeholder="Search tools, like discord or heic"
           autoComplete="off"
-          className="mt-1 w-full rounded-ctl border border-line bg-surface px-4 py-3 text-lg placeholder:text-muted"
+          className="w-full rounded-ctl border border-line bg-surface py-3.5 pr-14 pl-12 text-lg placeholder:text-muted"
         />
-        <p role="status" className="mt-2 min-h-5 text-sm text-muted">
-          {query.trim() === "" ? "" : count === 0 ? "No tools match that search. Try a shorter word." : `${count} ${count === 1 ? "tool" : "tools"} match.`}
-        </p>
+        <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 font-sans text-sm text-muted sm:block">
+          /
+        </kbd>
       </div>
+      <p role="status" className="mt-2 min-h-5 text-sm text-muted">
+        {!searching ? "" : count === 0 ? "No tools match that search. Try a shorter word." : `${count} ${count === 1 ? "tool" : "tools"} match.`}
+      </p>
 
-      <div className="mt-4 gap-x-10 md:columns-2 lg:columns-3">
-        {visible.map((group) => (
-          <section key={group.id} className="break-inside-avoid border-t border-line pt-4 pb-6">
-            <h2 className="text-lg font-semibold">
-              <Link href={`/${group.id}`} className="no-underline hover:text-accent-ink">
-                {group.label}
+      {!searching && featured}
+
+      <div className="mt-6 gap-x-10 md:columns-2 xl:columns-3">
+        {visible.map((category) => (
+          <section key={category.id} className="break-inside-avoid pb-8">
+            <h2 className="flex items-center gap-2 border-b border-line pb-2 text-base font-semibold">
+              <span className="text-accent-ink">{icons[`category:${category.id}`]}</span>
+              <Link href={`/${category.id}`} className="no-underline hover:text-accent-ink">
+                {category.label}
               </Link>
-              <span className="ml-2 text-sm font-normal text-muted">
-                {group.items.length}
-              </span>
+              <span className="text-sm font-normal text-muted">{category.tools.length}</span>
             </h2>
-            <ul className="mt-2">
-              {group.items.map((item) => (
-                <li key={item.slug}>
-                  <Link href={`/${item.slug}`} className="group block py-2 no-underline">
-                    <span className="font-medium underline decoration-line underline-offset-[3px] group-hover:text-accent-ink">
-                      {item.name}
+            <ul className="mt-1">
+              {category.tools.map((tool) => (
+                <li key={tool.slug}>
+                  <Link href={`/${tool.slug}`} className="group flex gap-3 py-2.5 no-underline">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-ctl border border-line text-muted group-hover:text-accent-ink">
+                      {icons[tool.slug]}
                     </span>
-                    <span className="mt-0.5 block text-sm text-muted">{item.blurb}</span>
+                    <span className="min-w-0">
+                      <span className="block font-medium group-hover:text-accent-ink">{tool.name}</span>
+                      <span className="mt-0.5 block text-sm text-muted">{tool.blurb}</span>
+                    </span>
                   </Link>
                 </li>
               ))}

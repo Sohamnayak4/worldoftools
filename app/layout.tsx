@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 import Script from "next/script";
-import { SiteHeader } from "@/components/SiteHeader";
+import { AppShell } from "@/components/AppShell";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   PIXELMOTH_SRC,
@@ -49,12 +49,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-dvh flex flex-col">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-[1040px] flex-1 px-4 pb-16">
-          {children}
-        </main>
-        <SiteFooter />
+      <body>
+        <AppShell>
+          <main className="w-full flex-1 px-4 pb-16 sm:px-6 lg:px-10">
+            {children}
+          </main>
+          <SiteFooter />
+        </AppShell>
         {/* Analytics. Loads once for the whole site and follows page changes
             by itself, so no manual pageview calls are needed. */}
         <Script
