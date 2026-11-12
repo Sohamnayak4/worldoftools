@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { AD_PLANS, MAX_SPONSORS } from "@/lib/ads";
 import { getSponsors } from "@/lib/sponsors";
 import { SITE_NAME } from "@/lib/site";
+import { formatCount, getTraffic } from "@/lib/traffic";
 import { tools } from "@/lib/tools";
 
 export const metadata: Metadata = pageMeta({
@@ -16,6 +17,7 @@ export const metadata: Metadata = pageMeta({
 
 export default async function AdvertisePage() {
   const places = MAX_SPONSORS - (await getSponsors()).length;
+  const traffic = await getTraffic();
   return (
     <article className="mx-auto max-w-[880px]">
       <Breadcrumb trail={[]} />
@@ -28,6 +30,13 @@ export default async function AdvertisePage() {
         It shows in the sidebar on every page and next to the headline on the
         homepage, on phones too.
       </p>
+      {traffic && (
+        <p className="mt-3 max-w-[65ch] tabular-nums">
+          {formatCount(traffic.allTime)} people have visited since launch,{" "}
+          {formatCount(traffic.last7Days)} of them in the last 7 days. Counted
+          by the site&apos;s own analytics and updated every 10 minutes.
+        </p>
+      )}
 
       <ul className="mt-6 grid gap-3 sm:grid-cols-3">
         {AD_PLANS.map((plan) => (

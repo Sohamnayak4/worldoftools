@@ -136,6 +136,10 @@ DO NOT
 - No arrows appended to links or buttons.
 - No fade-in or slide-up on scroll. No hover effects beyond a color change.
 - No stock illustrations, no fake testimonials, no stats counters.
+  Exception decided by the owner on 2026-11-13: real visitor counts from
+  Pixelmoth (lib/traffic.ts) appear as plain text above the homepage ad
+  slots and on the Advertise page, to show advertisers the traffic. No
+  animation, never estimated, and hidden if the count cannot be read.
 - No headline with one word in a different color or italic.
 - No monospace font used just to look technical.
 
