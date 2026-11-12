@@ -2,7 +2,8 @@ import { Megaphone } from "lucide-react";
 import { AdSlotButton } from "./AdSlotButton";
 import { AD_PLANS, MAX_SPONSORS, type Sponsor } from "@/lib/ads";
 import { getSponsors } from "@/lib/sponsors";
-import { formatCount, getTraffic } from "@/lib/traffic";
+import { getTraffic } from "@/lib/traffic";
+import { LiveCount } from "./LiveCount";
 
 const cheapest = AD_PLANS[0];
 
@@ -40,7 +41,7 @@ export async function AdSlots({ compact = false }: { compact?: boolean }) {
       <p className="flex items-center justify-between text-xs text-muted">
         <span className="tabular-nums">
           Sponsored
-          {traffic && <> · {formatCount(traffic.allTime)} visitors since launch</>}
+          {!compact && <LiveCount initial={traffic?.allTime ?? null} prefix=" · " suffix=" users" />}
         </span>
         <span>{MAX_SPONSORS - sponsors.length} of {MAX_SPONSORS} free</span>
       </p>

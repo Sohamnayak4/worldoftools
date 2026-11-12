@@ -10,7 +10,7 @@ export type Traffic = {
   last30Days: number;
 };
 
-async function fetchTraffic(): Promise<Traffic | null> {
+export async function fetchTraffic(): Promise<Traffic | null> {
   const key = process.env.PIXELMOTH_API_KEY;
   if (!key) return null;
   try {

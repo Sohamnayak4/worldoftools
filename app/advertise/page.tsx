@@ -5,7 +5,8 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { AD_PLANS, MAX_SPONSORS } from "@/lib/ads";
 import { getSponsors } from "@/lib/sponsors";
 import { SITE_NAME } from "@/lib/site";
-import { formatCount, getTraffic } from "@/lib/traffic";
+import { getTraffic } from "@/lib/traffic";
+import { LiveCount } from "@/components/LiveCount";
 import { tools } from "@/lib/tools";
 
 export const metadata: Metadata = pageMeta({
@@ -32,9 +33,10 @@ export default async function AdvertisePage() {
       </p>
       {traffic && (
         <p className="mt-3 max-w-[65ch] tabular-nums">
-          {formatCount(traffic.allTime)} people have visited since launch,{" "}
-          {formatCount(traffic.last7Days)} of them in the last 7 days. Counted
-          by the site&apos;s own analytics and updated every 10 minutes.
+          <LiveCount initial={traffic.allTime} /> people have visited since
+          launch, <LiveCount initial={traffic.last7Days} field="last7Days" /> of
+          them in the last 7 days. Counted by the site&apos;s own analytics and
+          updated every 30 seconds.
         </p>
       )}
 

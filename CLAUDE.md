@@ -127,6 +127,9 @@ LAYOUT (revised by the owner on 2026-11-12, after the first UI pass)
 
 DO NOT
 - No gradients, glow, blur, glassmorphism, or background patterns.
+  Exception decided by the owner on 2026-11-13: the ad popup shows the live
+  user count in large type with a glowing, pulsing green dot (--live). The
+  pulse stops for prefers-reduced-motion. Nowhere else.
 - Bordered tiles only for the "Start with" row and the facts strip. No card
   inside a card, and no tiles elsewhere.
 - No all-caps eyebrow labels above headings. No pills or badges for decoration.

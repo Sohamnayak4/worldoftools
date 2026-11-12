@@ -1,26 +1,51 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdForm } from "./AdForm";
 import { OPEN_AD_FORM_EVENT } from "./AdSlotButton";
+import { useLiveCount } from "./LiveCount";
+
+// The live user count at the top of the popup. Mounted only while the
+// popup is open, so it refreshes only then.
+function UserCount({ initial }: { initial: number | null }) {
+  const users = useLiveCount(initial);
+  return (
+    <div className="flex min-h-[4.5rem] items-center gap-3 border-b border-line px-5 py-3">
+      {users !== null && (
+        <>
+          <span className="live-dot shrink-0" aria-hidden="true" />
+          <p className="tabular-nums">
+            <span className="font-heading text-4xl font-semibold leading-none">
+              {users.toLocaleString("en-US")}
+            </span>{" "}
+            <span className="text-muted">users and counting</span>
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
 
 // The ad form in a popup, opened from any free ad slot.
-export function AdDialog({ placesLeft }: { placesLeft: number }) {
+export function AdDialog({ placesLeft, users }: { placesLeft: number; users: number | null }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    function open() {
+    function show() {
       dialogRef.current?.showModal();
+      setOpen(true);
     }
-    window.addEventListener(OPEN_AD_FORM_EVENT, open);
-    return () => window.removeEventListener(OPEN_AD_FORM_EVENT, open);
+    window.addEventListener(OPEN_AD_FORM_EVENT, show);
+    return () => window.removeEventListener(OPEN_AD_FORM_EVENT, show);
   }, []);
 
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby="ad-dialog-title"
+      onClose={() => setOpen(false)}
       onClick={(event) => {
         if (event.target === dialogRef.current) dialogRef.current?.close();
       }}
@@ -44,6 +69,7 @@ export function AdDialog({ placesLeft }: { placesLeft: number }) {
           <X size={18} aria-hidden="true" />
         </button>
       </div>
+      {open && <UserCount initial={users} />}
       <div className="p-5">
         <AdForm placesLeft={placesLeft} bare />
       </div>

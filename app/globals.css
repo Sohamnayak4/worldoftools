@@ -12,6 +12,7 @@
   --accent-ink: #f2b84b;
   --on-accent: #16181d;
   --over: #e5604d;
+  --live: #3fb950;
   color-scheme: dark;
 }
 
@@ -25,6 +26,7 @@
   --accent-ink: #7a5200;
   --on-accent: #16181d;
   --over: #b93a28;
+  --live: #1a7f37;
   color-scheme: light;
 }
 
@@ -90,6 +92,37 @@
 @media (prefers-reduced-motion: reduce) {
   .gauge-bar {
     transition: none;
+  }
+}
+
+/* The live dot next to the user count in the ad popup. Owner's exception
+   to the no-glow rule (2026-11-13). The pulse stops for reduced motion. */
+.live-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent),
+    0 0 14px 4px color-mix(in srgb, var(--live) 55%, transparent);
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 2s ease-out infinite;
+}
+@keyframes live-pulse {
+  from { transform: scale(1); opacity: 0.6; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after {
+    animation: none;
+    opacity: 0;
   }
 }
 

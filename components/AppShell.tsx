@@ -13,6 +13,7 @@ import { CategoryIcon, ToolIcon } from "./ToolIcon";
 import { MAX_SPONSORS } from "@/lib/ads";
 import { navCategories, navTools } from "@/lib/nav";
 import { getSponsors } from "@/lib/sponsors";
+import { getTraffic } from "@/lib/traffic";
 import { SITE_NAME } from "@/lib/site";
 
 function Brand() {
@@ -90,7 +91,10 @@ export async function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <SearchDialog tools={navTools} icons={icons} />
-      <AdDialog placesLeft={MAX_SPONSORS - (await getSponsors()).length} />
+      <AdDialog
+        placesLeft={MAX_SPONSORS - (await getSponsors()).length}
+        users={(await getTraffic())?.allTime ?? null}
+      />
     </div>
   );
 }
