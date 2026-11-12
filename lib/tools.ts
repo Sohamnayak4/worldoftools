@@ -94,17 +94,27 @@ export type FileInput = {
   decodeWidth?: number;
   // True when the tool takes several files at once, in order.
   multiple?: boolean;
+  // Fewest files the tool needs, when it takes several.
+  minFiles?: number;
   // A clearer message for one specific wrong file type that people often
   // pick by mistake. Checked before the general wrong-type message.
   commonMistake?: { mimePrefix: string; message: string; hint: string };
 };
 
-// A choice the visitor makes before starting, shown as a dropdown.
+// A choice the visitor makes before starting. A dropdown by default, or a
+// text field with `type: "text"`.
 export type ToolOption = {
   id: string;
   label: string;
-  choices: { value: string; label: string }[];
+  type?: "select" | "text";
+  // For dropdowns.
+  choices?: { value: string; label: string }[];
   defaultValue: string;
+  // For text fields.
+  placeholder?: string;
+  hint?: string;
+  // Only shown while another option has this value.
+  showWhen?: { id: string; value: string };
 };
 
 export type Tool = {
@@ -418,6 +428,76 @@ const IMAGE_MAX_SIZE: Fact = {
 const IMAGE_BROWSERS: Fact = {
   label: "Browsers",
   value: "Chrome and Edge 69 or later, Firefox 105 or later, Safari 16.4 or later",
+};
+
+// PDFs are read fully into memory, so the cap is per file.
+const PDF_INPUT: FileInput = {
+  accept: "application/pdf,.pdf",
+  mimePrefixes: ["application/pdf"],
+  extensions: [".pdf"],
+  noun: "PDF",
+  article: "a",
+  examples: "a .pdf document",
+  maxBytes: 200 * MB,
+  maxBytesPhone: 100 * MB,
+};
+
+// Several PDFs at once, in the order they should be joined.
+const PDFS_INPUT: FileInput = { ...PDF_INPUT, multiple: true, minFiles: 2 };
+
+const SPLIT_MODE: ToolOption = {
+  id: "mode",
+  label: "How to split",
+  choices: [
+    { value: "each", label: "Every page as its own PDF" },
+    { value: "pick", label: "Only the pages I type, in one PDF" },
+  ],
+  defaultValue: "each",
+};
+
+const SPLIT_PAGES: ToolOption = {
+  id: "pages",
+  label: "Pages to keep",
+  type: "text",
+  defaultValue: "",
+  placeholder: "1-3, 5, 8-10",
+  hint: "Use commas between pages and a dash for a run of pages.",
+  showWhen: { id: "mode", value: "pick" },
+};
+
+const PDF_DPI: ToolOption = {
+  id: "dpi",
+  label: "Resolution",
+  choices: [
+    { value: "72", label: "72 DPI, small file" },
+    { value: "150", label: "150 DPI, sharp on screen" },
+    { value: "300", label: "300 DPI, for printing" },
+  ],
+  defaultValue: "150",
+};
+
+const PDF_JPG_PAGES: ToolOption = {
+  id: "pages",
+  label: "Pages",
+  type: "text",
+  defaultValue: "",
+  placeholder: "All pages",
+  hint: "Leave empty for all pages, or type pages like 1-3, 5.",
+};
+
+const PDF_MAX_SIZE: Fact = {
+  label: "Max file size",
+  value: "200 MB per file on a computer, 100 MB per file on a phone",
+};
+
+const PDF_BROWSERS: Fact = {
+  label: "Browsers",
+  value: "Current versions of Chrome, Edge, Firefox and Safari",
+};
+
+const TEXT_PRIVACY: Fact = {
+  label: "Where it runs",
+  value: "In your browser. What you type is not sent anywhere or saved",
 };
 
 const AUDIO_BROWSERS: Fact = {
@@ -2930,6 +3010,710 @@ export const tools: Tool[] = [
       "crop-image",
       "compress-image-to-20kb",
       "resize-image",
+    ],
+  },
+  {
+    slug: "merge-pdf",
+    category: "pdf",
+    engine: "pdf",
+    preset: { kind: "pdf", operation: "merge" },
+    input: PDFS_INPUT,
+    actionLabel: "Merge PDFs",
+    primaryKeyword: "merge pdf",
+    secondaryKeywords: [
+      "combine pdf files",
+      "join pdf files into one",
+      "put pdfs together",
+      "combine pdfs in order",
+    ],
+    title: "Merge PDF files in your browser, with no upload",
+    h1: "Merge PDF files",
+    metaDescription:
+      "Merge PDF files in the order you set. Pick up to 50 PDFs and download one file called merged.pdf. Runs in your browser, and nothing is uploaded.",
+    shortAnswer:
+      "To merge PDF files, pick two or more PDFs, put them in order, and press Merge PDFs. The pages are joined into one file called merged.pdf, and the work happens in your browser.",
+    howItWorks: [
+      "Pick two or more PDFs, up to 50 in all. They appear in a list.",
+      "Use Up and Down to set the order, or Remove to drop a file from the list.",
+      "Press Add more files if you need to add another PDF.",
+      "Press Merge PDFs. The pages are joined in the order of the list.",
+      "Download merged.pdf.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input", value: "Two or more PDFs, up to 50" },
+      { label: "Output", value: "One PDF called merged.pdf" },
+      {
+        label: "Quality",
+        value: "Pages are copied as they are, not redrawn, so text stays selectable and quality does not change",
+      },
+      {
+        label: "Not kept",
+        value: "Bookmarks. Fillable form fields may not work in the merged file",
+      },
+      {
+        label: "Locked files",
+        value: "A password-protected PDF must be unlocked before it can be merged. The tool says which file is locked",
+      },
+      PDF_MAX_SIZE,
+      PDF_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I combine two PDF files into one?",
+        a: "Pick both PDFs, put them in order with Up and Down, and press Merge PDFs. You download one file called merged.pdf.",
+      },
+      {
+        q: "Does merging PDFs lower the quality?",
+        a: "No. The pages are copied as they are rather than redrawn, so text stays selectable and the quality does not change.",
+      },
+      {
+        q: "Can I change the order of the pages?",
+        a: "Yes. The pages are joined in the order of the list, so use Up and Down to move a file before or after another.",
+      },
+      {
+        q: "Why won't my PDF merge?",
+        a: "A password-protected PDF has to be unlocked before it can be merged. The tool tells you which file is locked.",
+      },
+    ],
+    relatedSlugs: [
+      "split-pdf",
+      "pdf-to-jpg",
+      "image-to-pdf",
+      "compress-image-to-100kb",
+    ],
+  },
+  {
+    slug: "split-pdf",
+    category: "pdf",
+    engine: "pdf",
+    preset: { kind: "pdf", operation: "split" },
+    input: PDF_INPUT,
+    options: [SPLIT_MODE, SPLIT_PAGES],
+    actionLabel: "Split PDF",
+    primaryKeyword: "split pdf",
+    secondaryKeywords: [
+      "extract pages from pdf",
+      "separate pdf pages",
+      "cut pdf into pages",
+      "pull pages out of a pdf",
+    ],
+    title: "Split PDF into pages or a page range, in your browser",
+    h1: "Split PDF",
+    metaDescription:
+      "Split a PDF into one file per page, or keep only the pages you type, such as 1-3, 5, 8-10. Files are made in your browser and nothing is uploaded.",
+    shortAnswer:
+      "To split a PDF, pick the file and choose how to split it. You can save every page as its own PDF, or type the pages to keep and get them back in one new PDF.",
+    howItWorks: [
+      "Pick one PDF. It is read in your browser.",
+      "Choose How to split: every page as its own PDF, or only the pages you type.",
+      "For typed pages, enter a list such as 1-3, 5, 8-10 in the Pages to keep field.",
+      "Press Split PDF and download the result.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      {
+        label: "Modes",
+        value: "Every page as its own PDF, or only the pages you type in one PDF",
+      },
+      {
+        label: "Output for every page",
+        value: "One ZIP file with names like page-001.pdf",
+      },
+      {
+        label: "Output for typed pages",
+        value: "One new PDF with the pages in the order typed. The same page can be typed twice",
+      },
+      {
+        label: "Page format",
+        value: "Commas between pages, a dash for a run, like 1-3, 5, 8-10",
+      },
+      {
+        label: "Quality",
+        value: "Pages are copied as they are, not redrawn, so quality does not change",
+      },
+      PDF_MAX_SIZE,
+      PDF_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I split a PDF into single pages?",
+        a: "Choose Every page as its own PDF and press Split PDF. You get one ZIP file with a PDF for each page, named like page-001.pdf.",
+      },
+      {
+        q: "Can I pull out only some pages?",
+        a: "Yes. Choose Only the pages I type, in one PDF, then enter pages such as 1-3, 5, 8-10. The pages come out in the order you typed them.",
+      },
+      {
+        q: "What happens if I type a page number that is too high?",
+        a: "The tool tells you how many pages the PDF has, so you can correct the list.",
+      },
+      {
+        q: "Does splitting a PDF lower the quality of its pages?",
+        a: "No. The pages are copied as they are, not redrawn, so quality does not change.",
+      },
+    ],
+    relatedSlugs: ["merge-pdf", "pdf-to-jpg", "image-to-pdf", "resize-image"],
+  },
+  {
+    slug: "pdf-to-jpg",
+    category: "pdf",
+    engine: "pdf",
+    preset: { kind: "pdf", operation: "to-jpg" },
+    input: PDF_INPUT,
+    options: [PDF_DPI, PDF_JPG_PAGES],
+    actionLabel: "Convert to JPG",
+    primaryKeyword: "pdf to jpg",
+    secondaryKeywords: [
+      "pdf to picture",
+      "convert pdf pages to images",
+      "save pdf as jpeg",
+      "pdf page to jpeg",
+    ],
+    title: "PDF to JPG converter, made in your browser",
+    h1: "Convert PDF to JPG",
+    metaDescription:
+      "Convert a PDF to JPG, one picture per page, at 72, 150 or 300 DPI. Pick pages, up to 100 at a time. Made in your browser, nothing is uploaded.",
+    shortAnswer:
+      "To convert a PDF to JPG, pick the file, choose a resolution, and press Convert to JPG. Each page becomes a JPG picture, drawn in your browser.",
+    howItWorks: [
+      "Pick a PDF. PDF.js, the PDF reader made by Mozilla, opens it in your browser.",
+      "Choose a resolution: 72 DPI for a small file, 150 DPI for sharp on screen, or 300 DPI for printing.",
+      "Leave Pages empty for all pages, or type pages like 1-3, 5.",
+      "Press Convert to JPG. A one-page result downloads as a JPG, and more pages download as one ZIP file.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      {
+        label: "Resolution",
+        value: "72 DPI for a small file, 150 DPI for sharp on screen (the default), or 300 DPI for printing",
+      },
+      {
+        label: "Output",
+        value: "One JPG for a one-page result, or one ZIP file with names like page-001.jpg for more pages",
+      },
+      { label: "Page limit", value: "Up to 100 pages at a time" },
+      {
+        label: "Background",
+        value: "Pages get a white background, and JPGs are saved at quality 90",
+      },
+      {
+        label: "Large pages",
+        value: "Very large pages are reduced to stay under about 16 million pixels",
+      },
+      {
+        label: "Text",
+        value: "Text in the JPG is part of the picture, so it can no longer be selected or searched",
+      },
+      {
+        label: "Passwords",
+        value: "Password-protected PDFs are not supported",
+      },
+      PDF_MAX_SIZE,
+      PDF_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "Which resolution should I pick for PDF to JPG?",
+        a: "Use 150 DPI for most pages, since it looks sharp on screen. Pick 300 DPI if you plan to print the JPG, or 72 DPI when file size matters more.",
+      },
+      {
+        q: "How do I convert only some pages to JPG?",
+        a: "Type the pages in the Pages field, such as 1-3, 5. Leave it empty to convert all pages.",
+      },
+      {
+        q: "Can I convert a password-protected PDF to JPG?",
+        a: "No. Password-protected PDFs are not supported.",
+      },
+      {
+        q: "Can I still select the text in the JPG?",
+        a: "No. Text in the JPG is part of the picture, so it cannot be selected or searched.",
+      },
+    ],
+    relatedSlugs: ["merge-pdf", "split-pdf", "image-to-pdf", "jpg-to-png"],
+  },
+  {
+    slug: "word-counter",
+    category: "text",
+    engine: "text",
+    preset: { kind: "utility", widget: "word-counter" },
+    actionLabel: "Count words",
+    primaryKeyword: "word counter",
+    secondaryKeywords: [
+      "count words in text",
+      "character counter",
+      "reading time calculator",
+      "word count online",
+    ],
+    title: "Word counter for characters, words and reading time",
+    h1: "Word counter",
+    metaDescription:
+      "Count words, characters, sentences and paragraphs as you type. The page also estimates reading and speaking time. Nothing you type leaves your browser.",
+    shortAnswer:
+      "To count words, type or paste your text into the box. The word, character, sentence and paragraph counts update as you type.",
+    howItWorks: [
+      "Type or paste your text into the box.",
+      "The counts update with every change, so you can see them move as you write.",
+      "Read the reading time at 200 words a minute and the speaking time at 130 words a minute.",
+      "Close the page when you are done. The text is not kept after that.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Counts shown",
+        value: "Words, characters, characters without spaces, sentences and paragraphs",
+      },
+      {
+        label: "Word rules",
+        value: "The browser's own word rules, so languages without spaces between words are counted too",
+      },
+      {
+        label: "Reading time",
+        value: "Words divided by 200 a minute",
+      },
+      {
+        label: "Speaking time",
+        value: "Words divided by 130 a minute",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I count words in a document?",
+        a: "Paste or type the text into the box. The word count updates as you type.",
+      },
+      {
+        q: "How is reading time calculated?",
+        a: "Reading time divides the word count by 200 words a minute. Speaking time divides it by 130 words a minute.",
+      },
+      {
+        q: "Does the word counter work in other languages?",
+        a: "Yes. It uses the browser's own word rules, so it also counts words in languages that do not put spaces between words.",
+      },
+      {
+        q: "Is the text I paste saved anywhere?",
+        a: "No. The text is not saved or sent anywhere, and it is gone when you close the page.",
+      },
+    ],
+    relatedSlugs: [
+      "case-converter",
+      "json-formatter",
+      "base64-encode-decode",
+      "percentage-calculator",
+    ],
+  },
+  {
+    slug: "case-converter",
+    category: "text",
+    engine: "text",
+    preset: { kind: "utility", widget: "case-converter" },
+    actionLabel: "Convert case",
+    primaryKeyword: "case converter",
+    secondaryKeywords: [
+      "change text to uppercase",
+      "title case converter",
+      "camelcase converter",
+      "snake case converter",
+    ],
+    title: "Case converter for title case, camelCase and snake_case",
+    h1: "Case converter",
+    metaDescription:
+      "Convert text to sentence case, lower case, UPPER CASE, Title Case, camelCase, snake_case or kebab-case. Copy the result with one button.",
+    shortAnswer:
+      "To change the case of text, paste it into the box and press the button for the case you need. The result appears in a second box, ready to copy.",
+    howItWorks: [
+      "Paste your text into the box.",
+      "Press one of the seven buttons: Sentence case, lower case, UPPER CASE, Title Case, camelCase, snake_case or kebab-case.",
+      "Read the converted text in the second box.",
+      "Use the Copy text button to take the result to your clipboard.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Buttons",
+        value: "Sentence case, lower case, UPPER CASE, Title Case, camelCase, snake_case and kebab-case",
+      },
+      {
+        label: "Title Case",
+        value: "Keeps small words such as \"a\", \"and\", \"of\" and \"the\" in lower case unless they come first or last",
+      },
+      {
+        label: "Code and file names",
+        value: "camelCase, snake_case and kebab-case drop punctuation, so the result suits code and file names",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I make text all uppercase?",
+        a: "Paste the text, then press UPPER CASE. The converted text appears in the second box.",
+      },
+      {
+        q: "What is camelCase used for?",
+        a: "camelCase joins words without spaces and capitalizes each word after the first. The tool drops punctuation when it makes camelCase, so the result can be used as a name in code.",
+      },
+      {
+        q: "Why are some words lower case in Title Case?",
+        a: "Title Case keeps small words such as a, and, of and the in lower case. If one of them comes first or last, it is capitalized.",
+      },
+      {
+        q: "Does the converted text leave my browser?",
+        a: "No. The conversion runs in your browser, and nothing is sent to a server.",
+      },
+    ],
+    relatedSlugs: [
+      "word-counter",
+      "json-formatter",
+      "base64-encode-decode",
+      "password-generator",
+    ],
+  },
+  {
+    slug: "qr-code-generator",
+    category: "utility",
+    engine: "none",
+    preset: { kind: "utility", widget: "qr-code-generator" },
+    actionLabel: "Make QR code",
+    primaryKeyword: "qr code generator",
+    secondaryKeywords: [
+      "make qr code from link",
+      "qr code maker",
+      "free qr code png",
+      "qr code svg download",
+    ],
+    title: "QR code generator with PNG and SVG download",
+    h1: "QR code generator",
+    metaDescription:
+      "Make a QR code from a link or any text. Choose the size and error correction, then download it as PNG or SVG. Codes are static and never expire.",
+    shortAnswer:
+      "To make a QR code, type a link or any text and the code appears as you type. Choose a size and an error correction level, then download the code as a PNG or SVG file.",
+    howItWorks: [
+      "Type or paste a link or any text.",
+      "The QR code preview updates with each change.",
+      "Choose a size of 256, 512 or 1024 pixels, and an error correction level.",
+      "Download the code as a PNG or an SVG file.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Sizes",
+        value: "256, 512 or 1024 pixels",
+      },
+      {
+        label: "Error correction",
+        value: "Low (7 percent), Medium (15 percent), Quartile (25 percent) or High (30 percent), which is how much of the code can be damaged and still scan",
+      },
+      {
+        label: "Capacity",
+        value: "Up to 2,953 bytes at Low error correction, and less at higher levels",
+      },
+      {
+        label: "Static codes",
+        value: "The content is stored inside the code itself, so the codes never expire and scans never pass through this site",
+      },
+      {
+        label: "Account",
+        value: "No account and no watermark",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I make a QR code for a link?",
+        a: "Paste the link into the box. The preview updates as you type, and you can download the code as a PNG or SVG.",
+      },
+      {
+        q: "Which error correction level should I choose?",
+        a: "Higher levels let more of the code be damaged and still scan, but they hold less text. Pick the level that suits how the code will be used.",
+      },
+      {
+        q: "Do QR codes made here expire?",
+        a: "No. The codes are static. The content is stored inside the code itself, so the code never expires.",
+      },
+      {
+        q: "Can I see how many people scanned my QR code?",
+        a: "Not with these codes. The content is stored inside the code, so a scan goes straight to your link and never passes through this site. Only the site the link points to can see its own visits.",
+      },
+    ],
+    relatedSlugs: [
+      "favicon-generator",
+      "image-to-pdf",
+      "word-counter",
+      "password-generator",
+    ],
+  },
+  {
+    slug: "password-generator",
+    category: "utility",
+    engine: "none",
+    preset: { kind: "utility", widget: "password-generator" },
+    actionLabel: "Make password",
+    primaryKeyword: "password generator",
+    secondaryKeywords: [
+      "random password maker",
+      "strong random password",
+      "generate password with symbols",
+      "password strength in bits",
+    ],
+    title: "Password generator with a strength reading in bits",
+    h1: "Password generator",
+    metaDescription:
+      "Generate a random password from 8 to 128 characters. Pick uppercase, lowercase, numbers and symbols, and see its strength in bits. Nothing is saved.",
+    shortAnswer:
+      "To make a password, choose a length and the character sets you want, then press Make password. The password is random, and its strength is shown in bits.",
+    howItWorks: [
+      "Choose a length from 8 to 128 characters. The default is 20.",
+      "Tick the character sets to use: uppercase letters, lowercase letters, numbers and symbols.",
+      "Optionally leave out characters that look alike, such as 0, O, l, 1 and I.",
+      "Press Copy password to copy it, or Make new password for another one.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Length",
+        value: "8 to 128 characters, 20 by default",
+      },
+      {
+        label: "Random source",
+        value: "The browser's cryptographic random number generator, crypto.getRandomValues",
+      },
+      {
+        label: "Each set",
+        value: "The password always includes at least one character from each set you chose",
+      },
+      {
+        label: "Strength",
+        value: "Shown in bits, worked out from the length and the number of possible characters",
+      },
+    ],
+    faqs: [
+      {
+        q: "How long should a password be?",
+        a: "The length is up to you. This tool goes from 8 to 128 characters, and 20 is the default. A longer password has more bits of strength.",
+      },
+      {
+        q: "What does the strength in bits mean?",
+        a: "It is worked out from the length and the number of possible characters. More bits means more possible combinations.",
+      },
+      {
+        q: "Is the password saved or sent anywhere?",
+        a: "No. The password is made in your browser and is not saved or sent anywhere. Copy it somewhere you trust before you close the page.",
+      },
+      {
+        q: "Why can I leave out some characters?",
+        a: "The option that avoids look-alike characters removes 0, O, l, 1 and I, which are easy to mix up when you type or read a password.",
+      },
+    ],
+    relatedSlugs: [
+      "qr-code-generator",
+      "base64-encode-decode",
+      "word-counter",
+      "json-formatter",
+    ],
+  },
+  {
+    slug: "json-formatter",
+    category: "utility",
+    engine: "text",
+    preset: { kind: "utility", widget: "json-formatter" },
+    actionLabel: "Format JSON",
+    primaryKeyword: "json formatter",
+    secondaryKeywords: [
+      "format json online",
+      "json beautifier",
+      "minify json",
+      "json validator",
+    ],
+    title: "JSON formatter, minifier and validator",
+    h1: "JSON formatter",
+    metaDescription:
+      "Format or minify JSON in your browser. Indent with 2 spaces, 4 spaces or tabs, sort keys A to Z, and see the line and column of any error.",
+    shortAnswer:
+      "To format JSON, paste it into the box and press Format JSON. Pick an indent first, or press Minify JSON to remove all spaces and line breaks.",
+    howItWorks: [
+      "Paste your JSON into the box.",
+      "Pick an indent of 2 spaces, 4 spaces or tabs, and tick the option to sort keys if you need it.",
+      "Press Format JSON, or press Minify JSON to remove all spaces and line breaks.",
+      "If the JSON is not valid, read the error. It gives the line and column where the JSON goes wrong.",
+      "Copy the result with the Copy text button.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Indent",
+        value: "2 spaces, 4 spaces or tabs",
+      },
+      {
+        label: "Sort keys",
+        value: "An option sorts object keys from A to Z",
+      },
+      {
+        label: "Checked by",
+        value: "The browser's own JSON parser",
+      },
+      {
+        label: "Errors",
+        value: "The error message, with the line and column where the JSON goes wrong",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I format JSON online?",
+        a: "Paste the JSON, pick an indent, and press Format JSON. The indented JSON is the result, and you can copy it with the Copy text button.",
+      },
+      {
+        q: "What is the difference between formatting and minifying JSON?",
+        a: "Formatting adds indents and line breaks so people can read the JSON. Minifying removes all spaces and line breaks, which makes the JSON as short as it can be.",
+      },
+      {
+        q: "Why does my JSON show an error?",
+        a: "The text is not valid JSON. The error shows the line and column where it goes wrong, which is often a missing comma or quote, or an extra comma before a closing bracket.",
+      },
+      {
+        q: "Does the JSON leave my browser?",
+        a: "No. Your browser checks and formats the JSON, and nothing you paste is sent to a server.",
+      },
+    ],
+    relatedSlugs: [
+      "word-counter",
+      "case-converter",
+      "base64-encode-decode",
+      "password-generator",
+    ],
+  },
+  {
+    slug: "base64-encode-decode",
+    category: "utility",
+    engine: "text",
+    preset: { kind: "utility", widget: "base64-encode-decode" },
+    actionLabel: "Encode",
+    primaryKeyword: "base64 encode",
+    secondaryKeywords: [
+      "base64 decoder",
+      "decode base64 text",
+      "url safe base64",
+      "utf-8 base64 converter",
+    ],
+    title: "Base64 encode and decode text, with UTF-8 support",
+    h1: "Base64 encode and decode",
+    metaDescription:
+      "Encode text to Base64 or decode Base64 back to text in your browser. Accents and emoji work, and an option makes URL-safe Base64.",
+    shortAnswer:
+      "To encode text in Base64, paste it and press Encode to Base64. To read Base64 text, press Decode from Base64. Base64 is an encoding, not encryption, so anyone can decode it.",
+    howItWorks: [
+      "Type or paste the text into the box.",
+      "Press Encode to Base64, or press Decode from Base64.",
+      "Tick the URL-safe option if the Base64 will go into a web address.",
+      "Take the result with the Copy text button once it appears.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Text encoding",
+        value: "UTF-8, so accents and emoji work",
+      },
+      {
+        label: "URL-safe Base64",
+        value: "Uses - and _ instead of + and /, and leaves out the = padding",
+      },
+      {
+        label: "Decoding",
+        value: "Accepts both kinds of Base64 and ignores spaces and line breaks",
+      },
+      {
+        label: "Errors",
+        value: "Says so when the input is not valid Base64, or when it decodes to data that is not text",
+      },
+    ],
+    faqs: [
+      {
+        q: "Can someone decode Base64 without a key?",
+        a: "Yes. Base64 is an encoding, not encryption, so anyone can decode it and no key is needed.",
+      },
+      {
+        q: "Why does my Base64 show an error?",
+        a: "The input is not valid Base64, or it decodes to data that is not text. Check that the whole value was copied.",
+      },
+      {
+        q: "What is URL-safe Base64?",
+        a: "It is Base64 that uses - and _ instead of + and /, and leaves out the = padding. Decoding accepts both kinds.",
+      },
+      {
+        q: "Do accents and emoji work?",
+        a: "Yes. The text is handled as UTF-8, so accents and emoji encode and decode correctly.",
+      },
+    ],
+    relatedSlugs: [
+      "json-formatter",
+      "password-generator",
+      "case-converter",
+      "word-counter",
+    ],
+  },
+  {
+    slug: "percentage-calculator",
+    category: "utility",
+    engine: "none",
+    preset: { kind: "utility", widget: "percentage-calculator" },
+    actionLabel: "Calculate",
+    primaryKeyword: "percentage calculator",
+    secondaryKeywords: [
+      "percent of a number",
+      "percent increase calculator",
+      "percent change formula",
+      "what percent of",
+    ],
+    title: "Percentage calculator for three common percent questions",
+    h1: "Percentage calculator",
+    metaDescription:
+      "Work out a percent of a number, what percent one number is of another, or the percentage change between two numbers. Each answer shows its formula.",
+    shortAnswer:
+      "Pick the calculator that matches your question and type the numbers. Each answer updates as you type and shows the formula it used.",
+    howItWorks: [
+      "Choose one of the three calculators on the page.",
+      "Type your numbers. The answer updates as you type.",
+      "For percentage change, check whether the answer is an increase or a decrease.",
+      "Read the formula under the answer to see how it was worked out.",
+    ],
+    facts: [
+      TEXT_PRIVACY,
+      {
+        label: "Percent of",
+        value: "X percent of Y is X ÷ 100 × Y",
+      },
+      {
+        label: "Share",
+        value: "X as a percent of Y is X ÷ Y × 100",
+      },
+      {
+        label: "Change",
+        value: "Change from X to Y is (Y − X) ÷ X × 100, and the answer says whether it is an increase or a decrease",
+      },
+      {
+        label: "Decimal mark",
+        value: "A comma can be used as the decimal mark",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I work out a percentage of a number?",
+        a: "Use the first calculator. Type the percent and the number, and the answer appears. The formula is X ÷ 100 × Y.",
+      },
+      {
+        q: "How do I find what percent one number is of another?",
+        a: "Use the second calculator. Type the part and the whole, and the answer uses the formula X ÷ Y × 100.",
+      },
+      {
+        q: "How is percentage change calculated?",
+        a: "Subtract the starting number from the new number, divide by the starting number, and multiply by 100. The formula is (Y − X) ÷ X × 100.",
+      },
+      {
+        q: "Can I use a comma in the numbers?",
+        a: "Yes. A comma can be used as the decimal mark, so 2,5 is read as 2.5.",
+      },
+    ],
+    relatedSlugs: [
+      "word-counter",
+      "password-generator",
+      "json-formatter",
+      "favicon-generator",
     ],
   },
 ];

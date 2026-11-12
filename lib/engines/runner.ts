@@ -31,6 +31,37 @@ export type EngineRun = {
   cancel: () => void;
 };
 
+// Runs a job on the page instead of in a worker, for libraries that need
+// the page, such as PDF.js drawing to a canvas. Same shape as runEngine.
+export function runOnPage(
+  task: (
+    signal: AbortSignal,
+    onProgress: (value: number, note?: string) => void,
+  ) => Promise<EngineResult>,
+  onProgress: (value: number, note?: string) => void,
+): EngineRun {
+  const controller = new AbortController();
+  let rejectCancel: ((error: Error) => void) | null = null;
+  const cancelled = new Promise<never>((_, reject) => {
+    rejectCancel = reject;
+  });
+  const result = Promise.race([
+    task(controller.signal, (value, note) => {
+      if (!controller.signal.aborted) {
+        onProgress(Math.max(0, Math.min(1, value)), note);
+      }
+    }),
+    cancelled,
+  ]);
+  return {
+    result,
+    cancel: () => {
+      controller.abort();
+      rejectCancel?.(new EngineCancelled());
+    },
+  };
+}
+
 export function runEngine(
   createWorker: () => Worker,
   file: File,

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { AdSlot } from "@/components/AdSlot";
 import { LimitGauge } from "@/components/LimitGauge";
 import { ToolShell } from "@/components/ToolShell";
+import { UtilityTool } from "@/components/UtilityTool";
+import { isWidgetName } from "@/lib/widgets";
 import { SITE_PROMISE } from "@/lib/site";
 import { specsFor } from "@/lib/photoSpecs";
 import { getRelatedTools, getTool, tools } from "@/lib/tools";
@@ -45,7 +47,9 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
       <p className="mt-1 text-sm text-muted">{SITE_PROMISE}</p>
 
       <div className="mt-5">
-        {tool.input ? (
+        {tool.preset.kind === "utility" && isWidgetName(tool.preset.widget) ? (
+          <UtilityTool widget={tool.preset.widget} />
+        ) : tool.input ? (
           <ToolShell
             engine={tool.engine}
             input={tool.input}

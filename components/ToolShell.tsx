@@ -11,6 +11,7 @@ import {
   EngineError,
   type EngineRun,
   runEngine,
+  runOnPage,
 } from "@/lib/engines/runner";
 import { KB, MB, formatBytes } from "@/lib/format";
 import type { EngineJob } from "@/lib/engines/types";
@@ -329,19 +330,30 @@ export function ToolShell({
       }
     }
 
-    const run = runEngine(
-      () => createEngineWorker(engine),
-      file,
-      job,
-      (value, note) =>
-        setPhase((current) =>
-          current.name === "working"
-            ? { ...current, progress: value, note }
-            : current,
-        ),
-      bitmap,
-      files,
-    );
+    const onProgress = (value: number, note?: string) =>
+      setPhase((current) =>
+        current.name === "working"
+          ? { ...current, progress: value, note }
+          : current,
+      );
+    // PDF.js draws on a page canvas, so PDF to JPG runs on the page.
+    const run =
+      preset.kind === "pdf" && preset.operation === "to-jpg"
+        ? runOnPage(
+            (signal, progress) =>
+              import("@/lib/engines/pdfRender").then(({ pdfToJpg }) =>
+                pdfToJpg(file, settings, signal, progress),
+              ),
+            onProgress,
+          )
+        : runEngine(
+            () => createEngineWorker(engine),
+            file,
+            job,
+            onProgress,
+            bitmap,
+            files,
+          );
     runRef.current = run;
     run.result
       .then(({ blob, fileName, details }) => {
@@ -444,6 +456,8 @@ export function ToolShell({
     panelHeight = "min-h-[410px]";
   } else if (showsPicture) {
     panelHeight = "min-h-[520px]";
+  } else if (options.length > 1) {
+    panelHeight = "min-h-[440px]";
   } else if (options.length > 0) {
     panelHeight = "min-h-[360px]";
   }
@@ -646,6 +660,14 @@ export function ToolShell({
                   >
                     Add more files
                   </button>
+                  {input.minFiles !== undefined &&
+                    files.length < input.minFiles && (
+                      <p className="mt-2 text-sm text-muted">
+                        Add at least {input.minFiles - files.length} more{" "}
+                        {input.minFiles - files.length === 1 ? "file" : "files"} to
+                        continue.
+                      </p>
+                    )}
                 </div>
               </>
             )}
@@ -664,33 +686,55 @@ export function ToolShell({
                 onChange={setSize}
               />
             )}
-            {options.map((option) => (
-              <div key={option.id} className="mt-3">
-                <label
-                  htmlFor={`${optionId}-${option.id}`}
-                  className="block text-sm text-muted"
-                >
-                  {option.label}
-                </label>
-                <select
-                  id={`${optionId}-${option.id}`}
-                  value={settings[option.id] ?? option.defaultValue}
-                  onChange={(event) =>
-                    setSettings((current) => ({
-                      ...current,
-                      [option.id]: event.target.value,
-                    }))
-                  }
-                  className="mt-1 w-full max-w-xs rounded-ctl border border-line bg-bg px-3 py-2 text-base"
-                >
-                  {option.choices.map((choice) => (
-                    <option key={choice.value} value={choice.value}>
-                      {choice.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
+            {options
+              .filter(
+                (option) =>
+                  !option.showWhen ||
+                  settings[option.showWhen.id] === option.showWhen.value,
+              )
+              .map((option) => {
+                const id = `${optionId}-${option.id}`;
+                const value = settings[option.id] ?? option.defaultValue;
+                const change = (next: string) =>
+                  setSettings((current) => ({ ...current, [option.id]: next }));
+                return (
+                  <div key={option.id} className="mt-3">
+                    <label htmlFor={id} className="block text-sm text-muted">
+                      {option.label}
+                    </label>
+                    {option.type === "text" ? (
+                      <input
+                        id={id}
+                        type="text"
+                        inputMode="numeric"
+                        value={value}
+                        placeholder={option.placeholder}
+                        onChange={(event) => change(event.target.value)}
+                        aria-describedby={option.hint ? `${id}-hint` : undefined}
+                        className="mt-1 w-full max-w-xs rounded-ctl border border-line bg-bg px-3 py-2 text-base placeholder:text-muted"
+                      />
+                    ) : (
+                      <select
+                        id={id}
+                        value={value}
+                        onChange={(event) => change(event.target.value)}
+                        className="mt-1 w-full max-w-xs rounded-ctl border border-line bg-bg px-3 py-2 text-base"
+                      >
+                        {(option.choices ?? []).map((choice) => (
+                          <option key={choice.value} value={choice.value}>
+                            {choice.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {option.hint && (
+                      <p id={`${id}-hint`} className="mt-1 text-sm text-muted">
+                        {option.hint}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             {targetBytes !== undefined && targetValid && (
               <p className="mt-3 text-sm text-muted">
                 {phase.file.size > targetBytes
@@ -707,7 +751,8 @@ export function ToolShell({
                   !targetValid ||
                   (wantsTrim && trim === null) ||
                   (sizePicker && size === null) ||
-                  (cropPicker && crop === null)
+                  (cropPicker && crop === null) ||
+                  (input.minFiles !== undefined && files.length < input.minFiles)
                 }
                 onClick={() => start(phase.file)}
               >
