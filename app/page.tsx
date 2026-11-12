@@ -54,25 +54,25 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-[1120px]">
-      <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
-        <div>
-          <h1 className="max-w-[760px] text-4xl font-semibold leading-[1.05] sm:text-5xl">
-            Free file tools that run in your browser
-          </h1>
-          <p className="mt-4 max-w-[640px] text-lg text-muted">
-            Compress, convert and edit video, audio, images and PDFs.{" "}
-            {tools.length} tools, no account, and your files never leave your
-            device.
-          </p>
-        </div>
-        {/* Sponsored slots: beside the headline on wide screens, below it on
-            phones, so they are visible on every device. */}
-        <div className="lg:row-span-2">
-          <AdSlots />
-        </div>
-        <div className="lg:col-start-1">
-          <ToolIndex categories={navCategories} icons={icons} featured={startWith} />
-        </div>
+      <div className="mt-10 lg:mt-14">
+        <ToolIndex
+          categories={navCategories}
+          icons={icons}
+          featured={startWith}
+          intro={
+            <>
+              <h1 className="max-w-[760px] text-4xl font-semibold leading-[1.05] sm:text-5xl">
+                Free file tools that run in your browser
+              </h1>
+              <p className="mt-4 max-w-[640px] text-lg text-muted">
+                Compress, convert and edit video, audio, images and PDFs.{" "}
+                {tools.length} tools, no account, and your files never leave
+                your device.
+              </p>
+            </>
+          }
+          aside={<AdSlots />}
+        />
       </div>
     </div>
   );

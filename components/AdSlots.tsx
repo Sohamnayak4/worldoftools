@@ -13,12 +13,14 @@ export async function AdSlots({ compact = false }: { compact?: boolean }) {
   const box = compact ? "px-3 py-2.5" : "px-4 py-3.5";
 
   return (
-    <section aria-label="Sponsored">
+    <section aria-label="Sponsored" className="flex flex-col">
       <p className="flex items-center justify-between text-xs text-muted">
         <span>Sponsored</span>
         <span>{MAX_SPONSORS - sponsors.length} of {MAX_SPONSORS} free</span>
       </p>
-      <ul className={`mt-2 grid gap-2 ${compact ? "" : "grid-cols-2 lg:grid-cols-1"}`}>
+      <ul
+        className={`mt-2 grid flex-1 gap-2 ${compact ? "" : "grid-cols-2 grid-rows-2 lg:gap-3"}`}
+      >
         {slots.map((sponsor, index) => (
           <li key={sponsor?.id ?? `free-${index}`}>
             {sponsor ? (

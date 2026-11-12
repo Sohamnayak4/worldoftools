@@ -11,11 +11,17 @@ export function ToolIndex({
   categories,
   icons,
   featured,
+  intro,
+  aside,
 }: {
   categories: NavCategory[];
   icons: Record<string, ReactNode>;
   // Shown between the search box and the list while nothing is typed.
   featured?: ReactNode;
+  // Headline and line shown above the search box.
+  intro?: ReactNode;
+  // Shown beside the headline and search on wide screens, below on phones.
+  aside?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -40,28 +46,36 @@ export function ToolIndex({
 
   return (
     <div>
-      <div className="relative max-w-[640px]">
-        <label htmlFor="tool-search" className="sr-only">
-          Search tools
-        </label>
-        <Search
-          size={20}
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted"
-        />
-        <input
-          ref={searchRef}
-          id="tool-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search tools, like discord or heic"
-          autoComplete="off"
-          className="w-full rounded-ctl border border-line bg-surface py-3.5 pr-14 pl-12 text-lg placeholder:text-muted"
-        />
-        <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 font-sans text-sm text-muted sm:block">
-          /
-        </kbd>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-stretch">
+        <div className="flex flex-col">
+          {intro}
+          <div className="mt-auto max-w-[640px] pt-8">
+            <div className="relative">
+              <label htmlFor="tool-search" className="sr-only">
+                Search tools
+              </label>
+              <Search
+                size={20}
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted"
+              />
+              <input
+                ref={searchRef}
+                id="tool-search"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search tools, like discord or heic"
+                autoComplete="off"
+                className="w-full rounded-ctl border border-line bg-surface py-3.5 pr-14 pl-12 text-lg placeholder:text-muted"
+              />
+              <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 font-sans text-sm text-muted sm:block">
+                /
+              </kbd>
+            </div>
+          </div>
+        </div>
+        {aside}
       </div>
       <p role="status" className="mt-2 min-h-5 text-sm text-muted">
         {!searching ? "" : count === 0 ? "No tools match that search. Try a shorter word." : `${count} ${count === 1 ? "tool" : "tools"} match.`}
