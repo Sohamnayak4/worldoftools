@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { type NavCategory, matchTools } from "@/lib/nav";
+import { type NavCategory, matchTools } from "@/lib/navMatch";
 
 // The homepage tool list with a search box. The full list is in the
 // server-rendered HTML. Typing only hides rows that do not match.

@@ -1,21 +1,10 @@
-import { CATEGORIES, type Category, tools } from "./tools";
+import { CATEGORIES, tools } from "./tools";
+import type { NavCategory, NavTool } from "./navMatch";
 
-// Plain data for the sidebar, the phone menu and the search dialog. Kept
-// serializable so client components can receive it as props.
-export type NavTool = {
-  slug: string;
-  name: string;
-  blurb: string;
-  category: Category;
-  keywords: string;
-};
+export type { NavCategory, NavTool } from "./navMatch";
 
-export type NavCategory = {
-  id: Category;
-  label: string;
-  tools: NavTool[];
-};
-
+// Plain data for the sidebar, the phone menu and the search dialog. Server
+// only: client components get it as props and import from ./navMatch.
 export const navTools: NavTool[] = tools.map((tool) => ({
   slug: tool.slug,
   name: tool.h1,
@@ -29,13 +18,3 @@ export const navCategories: NavCategory[] = CATEGORIES.map((category) => ({
   label: category.label,
   tools: navTools.filter((tool) => tool.category === category.id),
 })).filter((category) => category.tools.length > 0);
-
-// Words that must all appear in a tool's name, blurb or keywords.
-export function matchTools(list: NavTool[], query: string): NavTool[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return list;
-  return list.filter((tool) => {
-    const haystack = `${tool.name} ${tool.blurb} ${tool.keywords}`.toLowerCase();
-    return words.every((word) => haystack.includes(word));
-  });
-}

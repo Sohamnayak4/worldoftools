@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
-import type { NavCategory } from "@/lib/nav";
+import type { NavCategory } from "@/lib/navMatch";
 
 // Every category with its tools. The current tool is marked, and its
 // category is open. Icons arrive as rendered elements from the server.

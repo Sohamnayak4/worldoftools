@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { SearchButton } from "./SearchButton";
 import { SidebarNav } from "./SidebarNav";
-import type { NavCategory } from "@/lib/nav";
+import type { NavCategory } from "@/lib/navMatch";
 
 // The sidebar for phones, opened from a menu button.
 export function MobileMenu({

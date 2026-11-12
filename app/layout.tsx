@@ -32,6 +32,14 @@ export const metadata: Metadata = {
     description: `Free tools to compress, convert and resize video, images, audio and PDFs. Everything runs in your browser. ${SITE_PROMISE}`,
     path: "/",
   }),
+  // Search Console and Bing Webmaster Tools ownership tags. Set the codes as
+  // env vars in Vercel. Not needed if you verify with a DNS record instead.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
+  },
 };
 
 // Pages show current sponsor ads, so they refresh every 10 minutes. The Dodo

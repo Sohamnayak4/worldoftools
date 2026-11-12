@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { OPEN_SEARCH_EVENT } from "./SearchButton";
-import { type NavTool, matchTools } from "@/lib/nav";
+import { type NavTool, matchTools } from "@/lib/navMatch";
 
 // Site-wide tool search. Opens with Ctrl K or Cmd K, or the search buttons.
 export function SearchDialog({
