@@ -1,5 +1,6 @@
-import { MB } from "./format";
+import { KB, MB } from "./format";
 import { type LimitId, limits } from "./limits";
+import { type PhotoSpecId, photoSpecs } from "./photoSpecs";
 
 // The tool registry. This file is the single source of truth for every tool
 // page. Adding a tool means adding one entry to `tools` below. The dynamic
@@ -34,7 +35,11 @@ export type Preset =
       outputFormat?: string;
     }
   // `from` is set when the source is not ordinary video or audio.
-  | { kind: "convert"; outputFormat: "mp4" | "mp3" | "gif"; from?: "gif" }
+  | {
+      kind: "convert";
+      outputFormat: "mp4" | "mp3" | "gif" | "jpg" | "png" | "webp";
+      from?: "gif";
+    }
   // `media` says what is being cut. Video is the default.
   | { kind: "trim"; media?: "audio" }
   | { kind: "compress-gif" }
@@ -47,7 +52,8 @@ export type Preset =
       unit?: "px" | "mm" | "in";
       targetBytes?: number;
     }
-  | { kind: "crop" }
+  // `specs` is set when the output must match an official photo spec.
+  | { kind: "crop"; specs?: "passport" | "form" }
   | { kind: "pdf"; operation: "merge" | "split" | "to-jpg" | "from-images" }
   | { kind: "favicon" }
   | { kind: "strip-metadata" }
@@ -81,6 +87,13 @@ export type FileInput = {
   maxBytes: number;
   // Lower cap for phones, when the tool needs one.
   maxBytesPhone?: number;
+  // Set for formats a worker cannot open, such as SVG. The page decodes
+  // SVG files and hands the picture to the engine.
+  decodeOnPage?: boolean;
+  // Width to draw an SVG at when the tool has no width option.
+  decodeWidth?: number;
+  // True when the tool takes several files at once, in order.
+  multiple?: boolean;
 };
 
 // A choice the visitor makes before starting, shown as a dropdown.
@@ -101,6 +114,10 @@ export type Tool = {
   options?: ToolOption[];
   // Set when the visitor picks a start and end time with a preview player.
   range?: { media: "video" | "audio" };
+  // Set when the visitor types an output width and height.
+  sizePicker?: boolean;
+  // Set when the visitor drags a crop box over a preview.
+  cropPicker?: boolean;
   // The main button says what happens: "Compress video".
   actionLabel: string;
   primaryKeyword: string;
@@ -126,6 +143,17 @@ function limitFact(id: LimitId): Fact {
     label: `${limit.platform}: ${limit.appliesTo.charAt(0).toLowerCase()}${limit.appliesTo.slice(1)}`,
     value: `${limit.display}.${note} Checked ${limit.checked}`,
     sourceUrl: limit.sourceUrl,
+  };
+}
+
+// A facts row for an official photo spec, with its source link.
+function specFact(id: PhotoSpecId): Fact {
+  const spec = photoSpecs[id];
+  const note = "note" in spec ? ` ${spec.note}` : "";
+  return {
+    label: spec.label,
+    value: `${spec.requirement}. This tool makes ${spec.outWidth} by ${spec.outHeight} pixels.${note} Checked ${spec.checked}`,
+    sourceUrl: spec.sourceUrl,
   };
 }
 
@@ -245,6 +273,143 @@ const GIF_LEVEL: ToolOption = {
     { value: "strong", label: "Strong: half the width, half the frames" },
   ],
   defaultValue: "medium",
+};
+
+// Pictures are unpacked fully in memory, so the cap is lower than video.
+const IMAGE_CAPS = { maxBytes: 50 * MB, maxBytesPhone: 30 * MB };
+
+// Any picture a browser can open.
+const IMAGE_INPUT: FileInput = {
+  accept: "image/*",
+  mimePrefixes: ["image/"],
+  extensions: [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".gif",
+    ".bmp",
+    ".avif",
+    ".heic",
+    ".heif",
+  ],
+  noun: "image",
+  article: "an",
+  examples: "a JPG or PNG photo",
+  ...IMAGE_CAPS,
+};
+
+const PNG_INPUT: FileInput = {
+  accept: "image/png,.png",
+  mimePrefixes: ["image/png"],
+  extensions: [".png"],
+  noun: "PNG image",
+  article: "a",
+  examples: "a .png screenshot",
+  ...IMAGE_CAPS,
+};
+
+const JPG_INPUT: FileInput = {
+  accept: "image/jpeg,.jpg,.jpeg",
+  mimePrefixes: ["image/jpeg"],
+  extensions: [".jpg", ".jpeg"],
+  noun: "JPG image",
+  article: "a",
+  examples: "a .jpg photo",
+  ...IMAGE_CAPS,
+};
+
+const WEBP_INPUT: FileInput = {
+  accept: "image/webp,.webp",
+  mimePrefixes: ["image/webp"],
+  extensions: [".webp"],
+  noun: "WebP image",
+  article: "a",
+  examples: "a .webp saved from a website",
+  ...IMAGE_CAPS,
+};
+
+// A worker cannot open SVG, so the page decodes it first.
+const SVG_INPUT: FileInput = {
+  accept: "image/svg+xml,.svg",
+  mimePrefixes: ["image/svg"],
+  extensions: [".svg"],
+  noun: "SVG file",
+  article: "an",
+  examples: "a .svg logo or icon",
+  maxBytes: 20 * MB,
+  decodeOnPage: true,
+};
+
+const HEIC_INPUT: FileInput = {
+  accept: "image/heic,image/heif,.heic,.heif",
+  mimePrefixes: ["image/heic", "image/heif"],
+  extensions: [".heic", ".heif"],
+  noun: "HEIC photo",
+  article: "a",
+  examples: "a .heic photo from an iPhone",
+  ...IMAGE_CAPS,
+};
+
+// Several pictures at once, in the order they should appear.
+const IMAGES_INPUT: FileInput = {
+  ...IMAGE_INPUT,
+  multiple: true,
+};
+
+// A logo or picture to turn into site icons. SVG is drawn on the page.
+const FAVICON_INPUT: FileInput = {
+  ...IMAGE_INPUT,
+  accept: "image/*,.svg",
+  extensions: [...IMAGE_INPUT.extensions, ".svg"],
+  examples: "a square PNG or SVG logo",
+  decodeOnPage: true,
+  decodeWidth: 512,
+};
+
+const PDF_PAGE: ToolOption = {
+  id: "page",
+  label: "Page size",
+  choices: [
+    { value: "fit", label: "Same shape as each image" },
+    { value: "a4", label: "A4" },
+    { value: "letter", label: "US Letter" },
+  ],
+  defaultValue: "fit",
+};
+
+const IMAGE_QUALITY: ToolOption = {
+  id: "quality",
+  label: "Quality",
+  choices: [
+    { value: "92", label: "High, larger file" },
+    { value: "80", label: "Balanced" },
+    { value: "60", label: "Lower, smaller file" },
+  ],
+  defaultValue: "92",
+};
+
+const SVG_WIDTH: ToolOption = {
+  id: "width",
+  label: "PNG width",
+  choices: [
+    { value: "0", label: "The size set in the SVG" },
+    { value: "512", label: "512 pixels" },
+    { value: "1024", label: "1024 pixels" },
+    { value: "2048", label: "2048 pixels" },
+    { value: "4096", label: "4096 pixels" },
+  ],
+  defaultValue: "1024",
+};
+
+const IMAGE_MAX_SIZE: Fact = {
+  label: "Max file size",
+  value: "50 MB on a computer, 30 MB on a phone",
+};
+
+const IMAGE_BROWSERS: Fact = {
+  label: "Browsers",
+  value: "Chrome and Edge 69 or later, Firefox 105 or later, Safari 16.4 or later",
 };
 
 const AUDIO_BROWSERS: Fact = {
@@ -1539,6 +1704,1225 @@ export const tools: Tool[] = [
       },
     ],
     relatedSlugs: ["video-to-gif", "compress-gif", "mov-to-mp4", "webm-to-mp4"],
+  },
+  {
+    slug: "compress-image-to-20kb",
+    category: "image",
+    engine: "image",
+    preset: {
+      kind: "target-size",
+      targetBytes: 20 * KB,
+      userCanSetTarget: true,
+    },
+    input: IMAGE_INPUT,
+    actionLabel: "Compress image",
+    primaryKeyword: "compress image to 20kb",
+    secondaryKeywords: [
+      "reduce image size to 20kb",
+      "signature image under 20kb",
+      "20kb image compressor",
+      "small image under 20 kb",
+    ],
+    title: "Compress image to 20KB, free and in your browser",
+    h1: "Compress image to 20KB",
+    metaDescription:
+      "Compress an image to 20KB in your browser for signatures, simple scans and small icons. No upload and no account. The JPG is checked before download.",
+    shortAnswer:
+      "Some forms accept signature scans only up to 20KB. Pick the image, keep the 20KB target, and press Compress image to get a small JPG that is checked before you download it.",
+    howItWorks: [
+      "Pick the signature scan, simple document or icon. Your browser reads it on your device.",
+      "The target starts at 20KB. Type a different size if your form asks for another limit.",
+      "The tool lowers JPEG quality first, down to 60, and keeps the highest quality that fits.",
+      "If the file is still too big at quality 60, the picture is made smaller in pixels and the search runs again.",
+      "The result is checked to be under the target and shown in a preview. Then download the JPG.",
+    ],
+    facts: [
+      {
+        label: "Target size",
+        value: "20KB by default. You can type another size",
+      },
+      {
+        label: "Typical use",
+        value: "Signatures on online application forms, simple scans and small icons",
+      },
+      { label: "Output format", value: "JPG" },
+      {
+        label: "Method",
+        value: "Quality is lowered first, down to 60. Then the picture shrinks in pixels",
+      },
+      {
+        label: "Transparency",
+        value: "A see-through signature on a PNG gets a white background",
+      },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I compress an image to 20KB?",
+        a: "Pick the image and keep the 20KB target. Press Compress image. The tool lowers the JPEG quality until the file fits, then checks the size before you download it.",
+      },
+      {
+        q: "How do I make a signature image 20KB for a form?",
+        a: "Scan or photograph the signature on white paper, then pick the file here. The output is a JPG with a white background, which suits most signature boxes.",
+      },
+      {
+        q: "Will a photo look clear at 20KB?",
+        a: "Not at full size. At 20KB a photo has to be small in pixels, so this size suits signatures, simple scans and icons better than detailed photos.",
+      },
+      {
+        q: "Are my files uploaded when I compress to 20KB?",
+        a: "No. The compression runs in your browser, so the image is not sent to a server. It only leaves your device when you upload the finished file yourself.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-50kb",
+      "compress-image-to-100kb",
+      "compress-image-to-200kb",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "compress-image-to-50kb",
+    category: "image",
+    engine: "image",
+    preset: {
+      kind: "target-size",
+      targetBytes: 50 * KB,
+      userCanSetTarget: true,
+    },
+    input: IMAGE_INPUT,
+    actionLabel: "Compress image",
+    primaryKeyword: "compress image to 50kb",
+    secondaryKeywords: [
+      "reduce image size to 50kb",
+      "photo under 50 kb",
+      "50kb image compressor",
+      "form photo under 50kb",
+    ],
+    title: "Compress image to 50KB for forms, free and no upload",
+    h1: "Compress image to 50KB",
+    metaDescription:
+      "Compress a photo to 50KB in your browser for form uploads. Type another size if your form asks for one. Nothing is uploaded, and no account is needed.",
+    shortAnswer:
+      "Many forms cap the photo at 50KB. Pick the picture, keep the 50KB target, and press Compress image. A large phone photo is resized a lot to fit, so check the preview before you download.",
+    howItWorks: [
+      "Pick the photo you need to upload. A phone photo works, and so does a scan.",
+      "The target is 50KB. Type a different number if the form asks for another size.",
+      "Quality is tried from 92 down to 60, which keeps as much detail as the size allows.",
+      "A large phone photo may still be too big at quality 60, so its pixel size is cut and the search runs again.",
+      "The result is checked to be under 50KB and shown in a preview. Download the JPG when it looks right.",
+    ],
+    facts: [
+      {
+        label: "Target size",
+        value: "50KB by default. You can type another size",
+      },
+      {
+        label: "Typical use",
+        value: "Photos on online application forms and profile fields with a 50KB limit",
+      },
+      { label: "Output format", value: "JPG" },
+      {
+        label: "Method",
+        value: "JPEG quality drops to 60 at the lowest. Pixel size is cut only when needed",
+      },
+      {
+        label: "Transparency",
+        value: "Transparent parts of a PNG become white in the JPG",
+      },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I compress a photo to 50KB for a form?",
+        a: "Pick the photo and keep the 50KB target. Press Compress image. The tool searches for the highest quality that fits, then checks the file before you download it.",
+      },
+      {
+        q: "Will a face photo still look clear at 50KB?",
+        a: "Usually, as long as the picture is not made very large. A face photo has fewer details than a landscape, so it holds up well. Check the preview to be sure.",
+      },
+      {
+        q: "Why is my phone photo so small after I compress it to 50KB?",
+        a: "Phone photos have a lot of pixels. To get under 50KB the tool may have to cut the width a lot, after the quality has already dropped to 60.",
+      },
+      {
+        q: "Can I type a size other than 50KB?",
+        a: "Yes. Type the number the form asks for, in KB. The tool uses it as the target and checks the result against that number.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-20kb",
+      "compress-image-to-100kb",
+      "compress-image-to-200kb",
+      "png-to-jpg",
+    ],
+  },
+  {
+    slug: "compress-image-to-100kb",
+    category: "image",
+    engine: "image",
+    preset: {
+      kind: "target-size",
+      targetBytes: 100 * KB,
+      userCanSetTarget: true,
+    },
+    input: IMAGE_INPUT,
+    actionLabel: "Compress image",
+    primaryKeyword: "compress image to 100kb",
+    secondaryKeywords: [
+      "reduce image size to 100kb",
+      "scan under 100kb",
+      "100kb image compressor",
+      "profile picture under 100kb",
+    ],
+    title: "Compress image to 100KB for scans and ID photos",
+    h1: "Compress image to 100KB",
+    metaDescription:
+      "Compress an image to 100KB in your browser for document scans, ID photos and profile pictures. The result is checked under 100KB. No upload, no account.",
+    shortAnswer:
+      "Many forms and websites set a 100KB limit on scanned documents, ID photos and profile pictures. Pick the file, keep the 100KB target, and press Compress image to get a JPG under that size.",
+    howItWorks: [
+      "Pick the scan, ID photo or profile picture. The file stays on your device.",
+      "The target is 100KB. Type another size if the site sets a different limit.",
+      "Quality is lowered from 92 toward 60, and the highest value that fits is kept.",
+      "If the image is still too big, its pixel size is reduced and the search runs again.",
+      "The result is checked against 100KB and shown in a preview. Then download the JPG.",
+    ],
+    facts: [
+      {
+        label: "Target size",
+        value: "100KB by default. You can type another size",
+      },
+      {
+        label: "Typical use",
+        value: "Document scans, ID photos and profile pictures with a 100KB limit",
+      },
+      { label: "Output format", value: "JPG" },
+      {
+        label: "Method",
+        value: "Quality is tried from 92 down to 60, then pixel size is reduced",
+      },
+      {
+        label: "Transparency",
+        value: "Transparent areas of a scan saved as PNG turn white",
+      },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I compress a scanned document to 100KB?",
+        a: "Pick the scan and keep the 100KB target. The tool keeps the highest JPEG quality that fits, so the text stays as sharp as the size allows.",
+      },
+      {
+        q: "Will the text stay readable in a 100KB scan?",
+        a: "Usually. Text needs fewer pixels than a photo, so a clear scan keeps its words at this size. Check the preview before you download.",
+      },
+      {
+        q: "Can I use a 100KB image for an ID or profile picture?",
+        a: "Many sites accept a JPG under 100KB for profile pictures. This tool does not know the rules of each site, so check the size and format they ask for.",
+      },
+      {
+        q: "Is my scan sent to a server?",
+        a: "No. The compression runs in your browser, so the scan stays on your device until you upload the finished file yourself.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-20kb",
+      "compress-image-to-50kb",
+      "compress-image-to-200kb",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "compress-image-to-200kb",
+    category: "image",
+    engine: "image",
+    preset: {
+      kind: "target-size",
+      targetBytes: 200 * KB,
+      userCanSetTarget: true,
+    },
+    input: IMAGE_INPUT,
+    actionLabel: "Compress image",
+    primaryKeyword: "compress image to 200kb",
+    secondaryKeywords: [
+      "reduce image size to 200kb",
+      "photo under 200kb for email",
+      "200kb image compressor",
+      "blog image under 200kb",
+    ],
+    title: "Compress image to 200KB for web and email uploads",
+    h1: "Compress image to 200KB",
+    metaDescription:
+      "Compress an image to 200KB in your browser for listings, blog images and email. Photos need less resizing at this size. No upload, no account.",
+    shortAnswer:
+      "At 200KB a photo still looks good on a phone or in an email. Pick the image, keep the 200KB target, and press Compress image, which needs far less resizing than the smaller targets.",
+    howItWorks: [
+      "Pick the listing photo, blog image or upload you need to shrink.",
+      "The target starts at 200KB. Type another size if your site or email service sets a different limit.",
+      "Quality is tried from 92 down to 60. At this size the best quality often fits without changing the pixel size.",
+      "Only images that are still too big get smaller in pixels, and the search runs again.",
+      "The result is checked to be under 200KB and shown in a preview. Download the JPG when it looks right.",
+    ],
+    facts: [
+      {
+        label: "Target size",
+        value: "200KB by default. You can type another size",
+      },
+      {
+        label: "Typical use",
+        value: "Listings, blog images and uploads with a 200KB limit, or photos for email",
+      },
+      { label: "Output format", value: "JPG" },
+      {
+        label: "Method",
+        value: "Quality comes first, bottoming out at 60. Smaller pixels follow only if needed",
+      },
+      {
+        label: "Transparency",
+        value: "A PNG with see-through areas gets a white background",
+      },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I compress a photo to 200KB?",
+        a: "Pick the photo and keep the 200KB target. Press Compress image. The tool lowers the quality only as far as it needs to, then checks the size before you download.",
+      },
+      {
+        q: "Is 200KB good enough for a photo in an email?",
+        a: "For most emails, yes. A 200KB JPG loads quickly and looks fine on a phone screen, though a large print made from it will look softer.",
+      },
+      {
+        q: "Will a blog or listing site accept a 200KB image?",
+        a: "Some sites set a 200KB upload limit. If yours does, keep the 200KB target. If it sets a different limit, type that number instead.",
+      },
+      {
+        q: "Does a 200KB image lose much quality?",
+        a: "Less than a smaller target would. Most photos keep their detail because the pixel size usually stays the same.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-20kb",
+      "compress-image-to-50kb",
+      "compress-image-to-100kb",
+      "png-to-jpg",
+    ],
+  },
+  {
+    slug: "png-to-jpg",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "jpg" },
+    input: PNG_INPUT,
+    options: [IMAGE_QUALITY],
+    actionLabel: "Convert to JPG",
+    primaryKeyword: "png to jpg",
+    secondaryKeywords: [
+      "convert png to jpg",
+      "png to jpg converter",
+      "save png as jpg",
+      "smaller image from png",
+    ],
+    title: "PNG to JPG converter, free and with no upload",
+    h1: "Convert PNG to JPG",
+    metaDescription:
+      "Convert PNG to JPG in your browser at the quality you pick. JPG files of photos are usually much smaller. Nothing is uploaded, and no account is needed.",
+    shortAnswer:
+      "To convert PNG to JPG, pick the PNG file, choose a quality, and press Convert to JPG. JPG has no transparency, so any see-through areas become white in the new file.",
+    howItWorks: [
+      "Pick a PNG image from your phone or computer. It stays on your device.",
+      "Choose a quality: High, Balanced or Lower.",
+      "The tool draws the picture onto a canvas and saves it as a JPG at that quality.",
+      "Any see-through areas are filled with white, because JPG cannot store transparency.",
+      "Download the JPG.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input format", value: "PNG, including screenshots and images with transparent areas" },
+      { label: "Output format", value: "JPG" },
+      { label: "Quality choices", value: "92 high, 80 balanced or 60 lower. The default is 92" },
+      { label: "Transparency", value: "Not kept. See-through areas become white" },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I convert a PNG to a JPG for free?",
+        a: "Pick the PNG on this page and press Convert to JPG. The conversion runs in your browser, so there is no charge and no account to make.",
+      },
+      {
+        q: "Does converting PNG to JPG lower the quality?",
+        a: "It can. JPG is a lossy format, so sharp text and flat graphics can look slightly blurred. Photos usually look much the same. The High setting keeps the most detail.",
+      },
+      {
+        q: "Why does my transparent PNG have a white background now?",
+        a: "JPG has no transparency, so the tool fills any see-through areas with white. If you need a transparent background, keep the file as a PNG.",
+      },
+      {
+        q: "Why is the JPG so much smaller than the PNG?",
+        a: "JPG is lossy, so it can store a photo in far less space than PNG. The difference is usually largest for photos.",
+      },
+    ],
+    relatedSlugs: [
+      "jpg-to-png",
+      "image-to-webp",
+      "compress-image-to-100kb",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "jpg-to-png",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "png" },
+    input: JPG_INPUT,
+    actionLabel: "Convert to PNG",
+    primaryKeyword: "jpg to png",
+    secondaryKeywords: [
+      "convert jpg to png",
+      "jpg to png converter",
+      "jpeg to png",
+      "turn a jpeg into png",
+    ],
+    title: "JPG to PNG converter, free and with no upload",
+    h1: "Convert JPG to PNG",
+    metaDescription:
+      "Convert JPG to PNG in your browser. The picture is saved as a PNG, which stores every pixel it is given without further loss. Nothing is uploaded.",
+    shortAnswer:
+      "To convert JPG to PNG, pick the JPG file and press Convert to PNG. The picture is saved losslessly as a PNG, but detail the JPG already lost does not come back.",
+    howItWorks: [
+      "Pick a JPG or JPEG photo from your device.",
+      "The tool draws the picture onto a canvas in your browser.",
+      "It saves that picture as a PNG. From this point on, nothing more is lost.",
+      "The PNG is usually larger than the JPG, because it stores more data.",
+      "Download the PNG.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input format", value: "JPG or JPEG" },
+      { label: "Output format", value: "PNG" },
+      {
+        label: "Quality",
+        value: "Lossless from here on. Earlier JPG compression is not undone",
+      },
+      { label: "File size", value: "Usually larger than the JPG" },
+      {
+        label: "Transparent background",
+        value: "None. A JPG has no transparent areas to keep",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I convert a JPG to PNG?",
+        a: "Pick the JPG on this page and press Convert to PNG. Your browser makes the PNG, and you download it when it is ready.",
+      },
+      {
+        q: "Will converting JPG to PNG improve the picture?",
+        a: "No. The PNG keeps what the JPG holds, but detail the JPG already lost does not come back. The new file only stops further loss.",
+      },
+      {
+        q: "Why is my PNG bigger than the JPG?",
+        a: "PNG stores every pixel exactly and does not throw data away. That keeps the file larger, especially for photos.",
+      },
+      {
+        q: "Can I make the background of a JPG transparent?",
+        a: "Not with this tool. A JPG has no transparent areas, so the PNG has none either.",
+      },
+    ],
+    relatedSlugs: [
+      "png-to-jpg",
+      "image-to-webp",
+      "resize-image",
+      "remove-exif",
+    ],
+  },
+  {
+    slug: "webp-to-jpg",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "jpg" },
+    input: WEBP_INPUT,
+    options: [IMAGE_QUALITY],
+    actionLabel: "Convert to JPG",
+    primaryKeyword: "webp to jpg",
+    secondaryKeywords: [
+      "convert webp to jpg",
+      "webp to jpg converter",
+      "save webp as jpg",
+      "webp image for upload",
+    ],
+    title: "WebP to JPG converter, free and with no upload",
+    h1: "Convert WebP to JPG",
+    metaDescription:
+      "Convert WebP to JPG in your browser, so older apps and upload forms accept the picture. Pick the quality. Nothing is uploaded or sent to a server.",
+    shortAnswer:
+      "To convert WebP to JPG, pick the WebP file, choose a quality, and press Convert to JPG. JPG is accepted by older apps, editors and upload forms that may refuse WebP, and the file is made in your browser.",
+    howItWorks: [
+      "Pick a WebP image, such as one saved from a website.",
+      "Choose a JPG quality. High is the default.",
+      "The tool draws the picture and saves it as a JPG at that quality.",
+      "A see-through area becomes white, because JPG has no transparency.",
+      "If the WebP is animated, only its first frame is saved. Download the JPG.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input format", value: "WebP, including images saved from websites" },
+      { label: "Output format", value: "JPG" },
+      { label: "Quality choices", value: "92 high, 80 balanced or 60 lower. The default is 92" },
+      { label: "Transparency", value: "Not kept. See-through areas become white" },
+      { label: "Animation", value: "Only the first frame is saved" },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I change a WebP image to JPG?",
+        a: "Pick the WebP file on this page and press Convert to JPG. The JPG is made in your browser, and you download it when it is done.",
+      },
+      {
+        q: "Why will my WebP file not upload to some sites?",
+        a: "Many older apps, editors and upload forms only accept JPG or PNG. Converting the WebP to JPG gives you a file those places can read.",
+      },
+      {
+        q: "Does an animated WebP stay animated?",
+        a: "No. The tool saves only the first frame, because a JPG holds one picture.",
+      },
+      {
+        q: "Will the JPG keep the transparent parts of my WebP?",
+        a: "No. JPG has no transparency, so see-through areas become white. Keep the original WebP if you need them.",
+      },
+    ],
+    relatedSlugs: [
+      "image-to-webp",
+      "png-to-jpg",
+      "jpg-to-png",
+      "compress-image-to-200kb",
+    ],
+  },
+  {
+    slug: "image-to-webp",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "webp" },
+    input: IMAGE_INPUT,
+    options: [IMAGE_QUALITY],
+    actionLabel: "Convert to WebP",
+    primaryKeyword: "image to webp",
+    secondaryKeywords: [
+      "convert image to webp",
+      "jpg to webp",
+      "png to webp",
+      "webp converter online",
+    ],
+    title: "Image to WebP converter, free and with no upload",
+    h1: "Convert image to WebP",
+    metaDescription:
+      "Convert JPG, PNG and other images to WebP in your browser. WebP keeps transparency. Works in Chrome, Edge and Firefox. Nothing is uploaded.",
+    shortAnswer:
+      "To convert an image to WebP, pick the file and press Convert to WebP. Transparency is kept, but Safari, iPhone and iPad cannot save WebP from a canvas, so the tool shows a clear message on those browsers instead of a file.",
+    howItWorks: [
+      "Pick a JPG, PNG, GIF, BMP or AVIF image from your device.",
+      "Choose a quality: High, Balanced or Lower.",
+      "The tool draws the picture and saves it as WebP at that quality. Transparent areas stay transparent.",
+      "On Safari, iPhone and iPad the tool stops and shows a message, because Safari cannot save WebP from a canvas.",
+      "Download the WebP file.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input formats", value: "JPG, PNG, GIF (first frame only), BMP and AVIF" },
+      { label: "Output format", value: "WebP" },
+      { label: "Quality choices", value: "92 high, 80 balanced or 60 lower. The default is 92" },
+      { label: "Transparency", value: "Kept. Transparent areas stay transparent" },
+      IMAGE_MAX_SIZE,
+      {
+        label: "Browsers",
+        value: "Chrome and Edge 69 or later, Firefox 105 or later. Safari cannot save WebP",
+      },
+    ],
+    faqs: [
+      {
+        q: "How do I convert a JPG or PNG to WebP?",
+        a: "Pick the image on this page and press Convert to WebP. Your browser makes the WebP file, and you download it when it is ready.",
+      },
+      {
+        q: "Does WebP keep transparent backgrounds?",
+        a: "Yes. Transparent areas stay transparent in the WebP, which a JPG cannot do.",
+      },
+      {
+        q: "Why does the tool not work on my iPhone?",
+        a: "Safari cannot save WebP from a canvas, which is how the tool makes the file. On Safari, iPhone and iPad the tool shows a message instead of a download. Chrome, Edge or Firefox can make the file.",
+      },
+      {
+        q: "Should I convert my images to WebP?",
+        a: "Check where the file is going first. Some older apps and upload forms only accept JPG or PNG.",
+      },
+    ],
+    relatedSlugs: [
+      "webp-to-jpg",
+      "png-to-jpg",
+      "jpg-to-png",
+      "compress-image-to-50kb",
+    ],
+  },
+  {
+    slug: "svg-to-png",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "png" },
+    input: SVG_INPUT,
+    options: [SVG_WIDTH],
+    actionLabel: "Convert to PNG",
+    primaryKeyword: "svg to png",
+    secondaryKeywords: [
+      "convert svg to png",
+      "svg to png converter",
+      "svg logo to png",
+      "high resolution png from svg",
+    ],
+    title: "SVG to PNG converter, free and with no upload",
+    h1: "Convert SVG to PNG",
+    metaDescription:
+      "Convert SVG to PNG in your browser at 512, 1024, 2048 or 4096 pixels wide. Transparent backgrounds stay transparent. Nothing is uploaded.",
+    shortAnswer:
+      "To convert SVG to PNG, pick the SVG file, choose the PNG width, and press Convert to PNG. An SVG is drawn fresh at the width you pick, so the PNG stays sharp, and transparent backgrounds stay transparent.",
+    howItWorks: [
+      "Pick an SVG logo, icon or drawing from your device.",
+      "Choose the PNG width. Pick the size set in the SVG, or 512, 1024, 2048 or 4096 pixels.",
+      "The tool draws the SVG at that width. The height follows the SVG's proportions.",
+      "Transparent areas stay transparent in the PNG.",
+      "Download the PNG.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input format", value: "SVG" },
+      { label: "Output format", value: "PNG" },
+      {
+        label: "Width choices",
+        value: "The size set in the SVG, 512, 1024, 2048 or 4096 pixels. The default is 1024 pixels",
+      },
+      { label: "Transparency", value: "Kept. Transparent areas stay transparent" },
+      { label: "Max file size", value: "20 MB" },
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I convert an SVG to a PNG?",
+        a: "Pick the SVG on this page, choose a width, and press Convert to PNG. The PNG is drawn in your browser and is ready to download.",
+      },
+      {
+        q: "Does SVG to PNG lose quality?",
+        a: "The conversion does not blur the drawing, because an SVG is drawn fresh at the width you choose. Pick a larger width if you need a bigger PNG.",
+      },
+      {
+        q: "Why do some fonts or images in my SVG look wrong?",
+        a: "Fonts that are not installed on your device may not appear. Images linked from other websites inside the SVG may not appear either.",
+      },
+      {
+        q: "Why will my SVG not convert?",
+        a: "An SVG with no width, height or viewBox may fail to open. Add those values in an editor, then try again.",
+      },
+    ],
+    relatedSlugs: [
+      "png-to-jpg",
+      "image-to-webp",
+      "resize-image",
+      "compress-image-to-20kb",
+    ],
+  },
+  {
+    slug: "resize-image",
+    category: "image",
+    engine: "image",
+    preset: { kind: "resize" },
+    input: IMAGE_INPUT,
+    sizePicker: true,
+    actionLabel: "Resize image",
+    primaryKeyword: "resize image online",
+    secondaryKeywords: [
+      "change image size",
+      "resize photo in pixels",
+      "make image smaller in pixels",
+      "image resizer",
+    ],
+    title: "Resize image online, free and with no upload",
+    h1: "Resize image online",
+    metaDescription:
+      "Resize an image online in pixels, right in your browser. Type a width and height, or use half or quarter size. Nothing is uploaded and no account is needed.",
+    shortAnswer:
+      "To resize an image online, pick the picture, type a width and height in pixels, and press Resize image. The tool redraws it at that size in your browser, and proportions are kept unless you turn that off.",
+    howItWorks: [
+      "Pick an image. The page shows a preview and the original size in pixels.",
+      "Type a width or a height. Keep proportions is on by default, so the other side fills in by itself.",
+      "Or press Half size or Quarter size to fill both fields at once.",
+      "Press Resize image. The picture is redrawn at the new size in your browser.",
+      "Download the resized image.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      {
+        label: "Output format",
+        value: "JPG, PNG and WebP keep their format. Other formats are saved as JPG",
+      },
+      { label: "Quality", value: "JPG and WebP are saved at quality 90" },
+      { label: "Largest side", value: "12000 pixels" },
+      { label: "Total pixels", value: "About 16 million pixels" },
+      {
+        label: "Proportions",
+        value: "Kept by default. Turn off Keep proportions to set width and height separately",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I resize an image in pixels?",
+        a: "Pick the image, type a width or height in pixels, and press Resize image. With Keep proportions on, the other side is worked out for you.",
+      },
+      {
+        q: "Will enlarging an image make it sharper?",
+        a: "No. Making a picture larger than the original does not add detail, so it can look soft.",
+      },
+      {
+        q: "Does resizing keep the image format?",
+        a: "JPG, PNG and WebP keep their format. Other formats are saved as JPG. JPG and WebP files are saved at quality 90.",
+      },
+      {
+        q: "What is the largest size I can resize to?",
+        a: "The longest side can be up to 12000 pixels, and the total can be about 16 million pixels. Sizes above those limits are not allowed.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-100kb",
+      "compress-image-to-200kb",
+      "png-to-jpg",
+      "remove-exif",
+    ],
+  },
+  {
+    slug: "remove-exif",
+    category: "image",
+    engine: "image",
+    preset: { kind: "strip-metadata" },
+    input: IMAGE_INPUT,
+    actionLabel: "Remove metadata",
+    primaryKeyword: "remove exif data",
+    secondaryKeywords: [
+      "strip photo metadata",
+      "remove gps from photo",
+      "delete location from photo",
+      "remove metadata from image",
+    ],
+    title: "Remove EXIF data from photos, free and with no upload",
+    h1: "Remove EXIF data from a photo",
+    metaDescription:
+      "Remove EXIF data from a photo in your browser, including the GPS location, date and camera model. The picture is kept and nothing is uploaded.",
+    shortAnswer:
+      "To remove EXIF data from a photo, pick the image and press Remove metadata. For JPG and PNG the metadata is cut out of the file without touching the picture, so the location, date and camera details are gone.",
+    howItWorks: [
+      "Pick a photo from your phone or computer. It stays on your device.",
+      "The tool looks for the metadata blocks inside the file, such as EXIF.",
+      "For JPG and PNG, those blocks are cut out and the picture data is left unchanged.",
+      "A JPG stored sideways is redrawn upright at quality 95, so the photo does not turn.",
+      "Download the cleaned file.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      {
+        label: "What is removed",
+        value: "EXIF, XMP, IPTC and comments from JPG. Text, EXIF and time chunks from PNG",
+      },
+      {
+        label: "What is kept",
+        value: "The picture and the color profile, so colors look the same",
+      },
+      {
+        label: "Quality",
+        value: "Unchanged for JPG and PNG. A sideways JPG is redrawn at quality 95",
+      },
+      {
+        label: "Other formats",
+        value: "WebP and other formats are redrawn, which also removes the metadata",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I remove the location from a photo?",
+        a: "Pick the photo and press Remove metadata. The GPS location is stored in the EXIF data, so it is removed along with the rest of that data.",
+      },
+      {
+        q: "Does removing EXIF data change the photo?",
+        a: "For JPG and PNG, no. The metadata is cut out and the picture is left as it was. A JPG stored sideways is the one exception, because it is redrawn upright at quality 95.",
+      },
+      {
+        q: "What does EXIF data include?",
+        a: "EXIF can include the GPS location where a photo was taken, the date and time, and the camera or phone model.",
+      },
+      {
+        q: "Is my photo uploaded when I remove the metadata?",
+        a: "No. Your browser does the work, so the photo and its location are never sent to a server.",
+      },
+    ],
+    relatedSlugs: [
+      "resize-image",
+      "png-to-jpg",
+      "webp-to-jpg",
+      "jpg-to-png",
+    ],
+  },
+  {
+    slug: "heic-to-jpg",
+    category: "image",
+    engine: "image",
+    preset: { kind: "convert", outputFormat: "jpg" },
+    input: HEIC_INPUT,
+    options: [IMAGE_QUALITY],
+    actionLabel: "Convert to JPG",
+    primaryKeyword: "heic to jpg",
+    secondaryKeywords: [
+      "convert iphone photo to jpg",
+      "heic to jpg converter",
+      "open heic photo on windows",
+      "heic image converter",
+    ],
+    title: "Convert HEIC to JPG online, with no upload",
+    h1: "Convert HEIC to JPG",
+    metaDescription:
+      "Convert an iPhone HEIC photo to a JPG in your browser. Choose the JPG quality and download the file. Your photo is not sent to a server.",
+    shortAnswer:
+      "To convert HEIC to JPG, pick the HEIC photo, choose a quality, and press Convert to JPG. The tool decodes the photo in your browser and saves a JPG you can download.",
+    howItWorks: [
+      "Pick a HEIC or HEIF photo from your iPhone or computer.",
+      "Choose a JPG quality: 92 for the largest file, 80 balanced, or 60 for the smallest.",
+      "Press Convert to JPG. The photo is decoded in your browser.",
+      "The photo is turned the right way up before it is saved.",
+      "Download the JPG file when the conversion is done.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input", value: "HEIC or HEIF photos, such as those saved by an iPhone" },
+      { label: "Output", value: "JPG" },
+      {
+        label: "Quality",
+        value: "92 for the largest file, 80 balanced, or 60 for the smallest file",
+      },
+      {
+        label: "Decoding",
+        value: "Safari reads HEIC itself. Other browsers download a decoder when the first photo is converted",
+      },
+      {
+        label: "Several pictures",
+        value: "A HEIC file that holds several pictures gives the main one",
+      },
+      {
+        label: "Live Photos",
+        value: "The video part of a Live Photo is not included",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I convert a HEIC photo to JPG?",
+        a: "Pick the HEIC photo, choose a quality, and press Convert to JPG. Download the JPG when the conversion is done.",
+      },
+      {
+        q: "Why does my iPhone photo not open on Windows?",
+        a: "iPhones save photos as HEIC by default. Many Windows apps, websites and upload forms cannot open HEIC, so a JPG copy is easier to use.",
+      },
+      {
+        q: "Can I convert several HEIC photos at once?",
+        a: "No. The tool converts one photo at a time, so repeat the steps for each picture.",
+      },
+      {
+        q: "Does the JPG keep the photo's orientation?",
+        a: "Yes. The photo is turned the right way up before it is saved, so it does not come out sideways.",
+      },
+    ],
+    relatedSlugs: [
+      "png-to-jpg",
+      "webp-to-jpg",
+      "compress-image-to-200kb",
+      "remove-exif",
+    ],
+  },
+  {
+    slug: "crop-image",
+    category: "image",
+    engine: "image",
+    preset: { kind: "crop" },
+    input: IMAGE_INPUT,
+    cropPicker: true,
+    actionLabel: "Crop image",
+    primaryKeyword: "crop image online",
+    secondaryKeywords: [
+      "crop photo online",
+      "cut out part of image",
+      "crop picture to square",
+      "crop image to pixel size",
+    ],
+    title: "Crop image online, with no upload",
+    h1: "Crop image online",
+    metaDescription:
+      "Crop an image online in your browser. Drag the box, pick a shape such as square or 16:9, or type exact pixel values. Your picture stays on your device.",
+    shortAnswer:
+      "To crop an image online, pick the picture, drag the box over the part you want, and press Crop image. The pixels inside the box keep their original size, so nothing is scaled.",
+    howItWorks: [
+      "Pick an image. The page shows it with a crop box on top.",
+      "Drag the box to move it, or drag a corner to resize it.",
+      "Choose a shape: free, 1:1 square, 4:3, 3:4, 16:9 or 9:16.",
+      "Or type the left, top, width and height in pixels for an exact box.",
+      "Press Crop image, then download the result.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Shapes", value: "Free, 1:1 square, 4:3, 3:4, 16:9 or 9:16" },
+      {
+        label: "Exact size",
+        value: "Left, top, width and height can be typed in pixels",
+      },
+      {
+        label: "Keyboard",
+        value: "Arrow keys move the box. Plus and minus keys resize it",
+      },
+      {
+        label: "Output format",
+        value: "JPG, PNG and WebP keep their format. Other formats come out as JPG",
+      },
+      { label: "Quality", value: "JPG and WebP are saved at quality 92" },
+      {
+        label: "Scaling",
+        value: "None. The pixels inside the box keep their original size",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I crop a picture to a square?",
+        a: "Choose the 1:1 square shape, then drag the box over the part you want to keep. Press Crop image to save it.",
+      },
+      {
+        q: "Will cropping make my image smaller in pixels?",
+        a: "The pixels inside the box keep their original size, so the output has the size of the box in pixels. Nothing is scaled up or down.",
+      },
+      {
+        q: "Which formats stay the same after cropping?",
+        a: "Cropped JPG, PNG and WebP files stay in their own format. Other formats come out as JPG files.",
+      },
+      {
+        q: "Can I type exact pixel values for the crop?",
+        a: "Yes. Type the left, top, width and height in pixels, and the box moves and resizes to match the numbers you enter.",
+      },
+    ],
+    relatedSlugs: [
+      "resize-image",
+      "resize-photo-for-passport",
+      "compress-image-to-100kb",
+      "remove-exif",
+    ],
+  },
+  {
+    slug: "image-to-pdf",
+    category: "image",
+    engine: "image",
+    preset: { kind: "pdf", operation: "from-images" },
+    input: IMAGES_INPUT,
+    options: [PDF_PAGE],
+    actionLabel: "Make PDF",
+    primaryKeyword: "image to pdf",
+    secondaryKeywords: [
+      "jpg to pdf",
+      "photos to pdf",
+      "combine images into pdf",
+      "png to pdf",
+    ],
+    title: "Image to PDF online, with no upload",
+    h1: "Convert image to PDF",
+    metaDescription:
+      "Turn one image or several into a PDF, one image per page. Set the page order and choose A4, US Letter or the image's own shape. Made in your browser.",
+    shortAnswer:
+      "To make a PDF from images, pick one picture or several, put them in order, and press Make PDF. Each image becomes one page, and the file is built in your browser.",
+    howItWorks: [
+      "Pick one image or several at once. They appear in a list.",
+      "Use Move up and Move down to set the page order, or Remove to drop an image from the list.",
+      "Add more files with the Add more files button if you need them.",
+      "Choose the page size: the image's own shape, A4 or US Letter.",
+      "Press Make PDF and download the file.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      {
+        label: "Input",
+        value: "JPG, PNG, WebP, HEIC and other common image formats",
+      },
+      { label: "Output", value: "One PDF with one image per page" },
+      {
+        label: "Page size",
+        value: "Same shape as each image, A4 or US Letter",
+      },
+      {
+        label: "Page layout",
+        value: "On A4 and US Letter the image is centered with a margin. Wide images turn the page sideways",
+      },
+      {
+        label: "Image quality",
+        value: "Images are stored as JPG at quality 90. Very large images are reduced to 3000 pixels on the long side",
+      },
+      {
+        label: "Limit",
+        value: "Up to 50 images, 50 MB each on a computer and 30 MB each on a phone",
+      },
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I put several images into one PDF?",
+        a: "Pick the images together, then put them in order with Move up and Move down. Press Make PDF, and each image becomes one page in the order shown.",
+      },
+      {
+        q: "Can I change the page size?",
+        a: "Yes. Choose the image's own shape, A4 or US Letter. On A4 and US Letter the image is centered with a margin.",
+      },
+      {
+        q: "How many images can I add?",
+        a: "Up to 50 images. Each image can be up to 50 MB on a computer or 30 MB on a phone.",
+      },
+      {
+        q: "Does the PDF lose image quality?",
+        a: "Images are stored as JPG at quality 90 inside the PDF. Very large images are first reduced to 3000 pixels on the long side.",
+      },
+    ],
+    relatedSlugs: [
+      "compress-image-to-200kb",
+      "png-to-jpg",
+      "heic-to-jpg",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "favicon-generator",
+    category: "image",
+    engine: "image",
+    preset: { kind: "favicon" },
+    input: FAVICON_INPUT,
+    actionLabel: "Make favicon",
+    primaryKeyword: "favicon generator",
+    secondaryKeywords: [
+      "make favicon from logo",
+      "favicon.ico maker",
+      "website icon generator",
+      "apple touch icon generator",
+    ],
+    title: "Favicon generator, with a ZIP of site icons",
+    h1: "Favicon generator",
+    metaDescription:
+      "Make a favicon.ico, Apple touch icon and web app icons from one square logo. Download them as a ZIP with the HTML tags to paste into your page head.",
+    shortAnswer:
+      "To make a favicon, pick a square logo as a PNG, SVG, JPG or WebP file and press Make favicon. The tool builds a ZIP of icon files and a text file with the HTML tags for your page head.",
+    howItWorks: [
+      "Pick a logo as a PNG, SVG, JPG or WebP file. A square picture works best.",
+      "The tool draws each icon size in your browser.",
+      "Press Make favicon to build the ZIP.",
+      "Open the text file and paste its tags into the head of your pages.",
+      "Download the ZIP file.",
+    ],
+    facts: [
+      RUNS_LOCALLY,
+      { label: "Input", value: "A square logo as PNG, SVG, JPG or WebP" },
+      {
+        label: "What is in the ZIP",
+        value: "favicon.ico with 16, 32 and 48 pixel sizes, apple-touch-icon.png at 180 pixels, icon-192.png, icon-512.png, site.webmanifest, and a text file with the HTML tags for the page head",
+      },
+      {
+        label: "Picture that is not square",
+        value: "Centered with see-through space around it. It is not stretched",
+      },
+      {
+        label: "Apple touch icon",
+        value: "Has a white background, because iPhones do not show transparency there",
+      },
+      {
+        label: "Small sizes",
+        value: "A simple, bold logo reads best at 16 pixels",
+      },
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "Do I need to make each icon size myself?",
+        a: "No. One logo is enough, and the tool makes each size from it.",
+      },
+      {
+        q: "Why does my logo have space around it?",
+        a: "A picture that is not square is centered with see-through space around it, so it is not stretched. A square logo avoids the extra space.",
+      },
+      {
+        q: "Why is the Apple touch icon white behind my logo?",
+        a: "iPhones do not show transparency in that icon, so the tool adds a white background to it.",
+      },
+      {
+        q: "Which logo works best for a small favicon?",
+        a: "A simple, bold logo reads best at 16 pixels. Fine lines and small text are hard to see at that size.",
+      },
+    ],
+    relatedSlugs: [
+      "svg-to-png",
+      "png-to-jpg",
+      "image-to-webp",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "resize-photo-for-passport",
+    category: "image",
+    engine: "image",
+    preset: { kind: "crop", specs: "passport" },
+    input: IMAGE_INPUT,
+    cropPicker: true,
+    actionLabel: "Make passport photo",
+    primaryKeyword: "passport photo resize",
+    secondaryKeywords: [
+      "passport photo size online",
+      "uk passport photo online",
+      "canada passport photo size",
+      "crop passport photo",
+    ],
+    title: "Passport photo resize for UK and Canada online",
+    h1: "Passport photo resize",
+    metaDescription:
+      "Crop and resize a photo to a UK or Canada online passport size in your browser. Or type a custom size. Check the official page for the rules.",
+    shortAnswer:
+      "To resize a passport photo online, pick a preset or Custom size, drag the crop box so the head and shoulders are inside, and press Make passport photo. The tool crops the photo, resizes it to the chosen pixel size, and saves a JPG.",
+    howItWorks: [
+      "Choose a preset: UK passport online application or Canada passport online renewal. Or choose Custom size.",
+      "Pick your photo. A crop box in the right shape appears on it.",
+      "Drag the box so the head and shoulders are inside it.",
+      "Press Make passport photo. The tool crops the photo and resizes it to the preset's pixel size.",
+      "Download the JPG, then check the official page before you apply.",
+    ],
+    facts: [
+      specFact("ukPassport"),
+      specFact("canadaPassport"),
+      {
+        label: "Custom size",
+        value: "Type any width, height and maximum file size",
+      },
+      {
+        label: "What it does not check",
+        value: "Background, lighting, expression and head size. Follow the official page for those",
+      },
+      { label: "Output", value: "JPG" },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "Will the tool check my passport photo against the rules?",
+        a: "No. It only crops and resizes the photo. It cannot check the background, lighting, expression or head size, so read the official page before you apply.",
+      },
+      {
+        q: "Why are only two passport presets included?",
+        a: "Only the UK and Canada presets are included for now, because their rules were confirmed on the official pages. For any other form, use Custom size and type the numbers from the page you are applying through.",
+      },
+      {
+        q: "Does the tool change the background or lighting?",
+        a: "No. The photo is cropped and resized only, so the background, lighting and face are not changed.",
+      },
+      {
+        q: "Is the saved file a JPG?",
+        a: "Yes. The result is a JPG whose file size falls inside the range of the preset or custom size you chose.",
+      },
+    ],
+    relatedSlugs: [
+      "resize-photo-and-signature",
+      "crop-image",
+      "compress-image-to-50kb",
+      "resize-image",
+    ],
+  },
+  {
+    slug: "resize-photo-and-signature",
+    category: "image",
+    engine: "image",
+    preset: { kind: "crop", specs: "form" },
+    input: IMAGE_INPUT,
+    cropPicker: true,
+    actionLabel: "Resize for form",
+    primaryKeyword: "resize photo and signature for form",
+    secondaryKeywords: [
+      "upsc photo resize",
+      "signature image size online",
+      "resize signature for online form",
+      "photo size for online application",
+    ],
+    title: "Resize photo and signature for form online",
+    h1: "Resize photo and signature for form",
+    metaDescription:
+      "Resize a photo and a scanned signature for an online application form, to the pixel size and file size range the form asks for. Done in your browser.",
+    shortAnswer:
+      "To resize a photo or signature for an online form, pick a preset or Custom size, drag the crop box over the face or the signature, and press Resize for form. The tool saves a JPG inside the file size range.",
+    howItWorks: [
+      "Choose a preset: UPSC online application photograph or UPSC online application signature. Or choose Custom size.",
+      "Pick the photo and drag the crop box over the face.",
+      "Press Resize for form. The tool resizes that part and saves a JPG.",
+      "Repeat the steps for the signature, one picture at a time.",
+      "Check the size and file size against your form's instructions.",
+    ],
+    facts: [
+      specFact("upscPhoto"),
+      specFact("upscSignature"),
+      {
+        label: "Custom size",
+        value: "Type the width, height and maximum file size from your form's notice",
+      },
+      { label: "Output", value: "JPG" },
+      {
+        label: "Signing tip",
+        value: "Use a dark pen so the strokes show clearly after resizing",
+      },
+      RUNS_LOCALLY,
+      IMAGE_MAX_SIZE,
+      IMAGE_BROWSERS,
+    ],
+    faqs: [
+      {
+        q: "How do I resize a photo for an online form?",
+        a: "Pick the photo, choose a preset or Custom size, and drag the crop box over the face. Press Resize for form to save a JPG inside the file size range.",
+      },
+      {
+        q: "Can I resize the signature with the same settings?",
+        a: "Choose the UPSC signature preset for a signature. Do the photo and the signature one after the other, because each one needs its own crop.",
+      },
+      {
+        q: "What if my form is not listed as a preset?",
+        a: "Choose Custom size and type the width, height and maximum file size from your form's own notice. Form rules change with each notification, so presets are not kept for every form.",
+      },
+      {
+        q: "Does the tool check that my signature is valid?",
+        a: "No. It only crops and resizes the picture. It does not check the signature, the photo or the form rules, so read the notice before you submit.",
+      },
+    ],
+    relatedSlugs: [
+      "resize-photo-for-passport",
+      "crop-image",
+      "compress-image-to-20kb",
+      "resize-image",
+    ],
   },
 ];
 

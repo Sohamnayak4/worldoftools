@@ -5,6 +5,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { LimitGauge } from "@/components/LimitGauge";
 import { ToolShell } from "@/components/ToolShell";
 import { SITE_PROMISE } from "@/lib/site";
+import { specsFor } from "@/lib/photoSpecs";
 import { getRelatedTools, getTool, tools } from "@/lib/tools";
 
 // Every tool page is built from the registry at build time.
@@ -52,6 +53,13 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
             preset={tool.preset}
             options={tool.options}
             range={tool.range}
+            sizePicker={tool.sizePicker}
+            cropPicker={tool.cropPicker}
+            cropSpecs={
+              tool.preset.kind === "crop" && tool.preset.specs
+                ? specsFor(tool.preset.specs)
+                : undefined
+            }
           />
         ) : (
           limitBytes !== undefined && <LimitGauge limitBytes={limitBytes} />

@@ -10,6 +10,17 @@ export type EngineJob = {
   targetBytes?: number;
   // Part of the file to keep, in seconds.
   range?: { start: number; end: number };
+  // Output size in pixels, for resize tools.
+  size?: { width: number; height: number };
+  // Part of the picture to keep, in the picture's own pixels.
+  crop?: { x: number; y: number; width: number; height: number };
+  // Exact output size and file size range, for photo spec tools.
+  output?: {
+    width: number;
+    height: number;
+    minBytes?: number;
+    maxBytes?: number;
+  };
   // Values of the tool's dropdown options, by option id.
   settings: Record<string, string>;
   // Test switch for the fake engine. Makes it fail halfway.
@@ -19,7 +30,12 @@ export type EngineJob = {
 export type EngineRequest = {
   type: "start";
   file: File;
+  // Every picked file, in order, for tools that take several.
+  files?: File[];
   job: EngineJob;
+  // A picture already decoded on the page, for formats a worker cannot
+  // open, such as SVG.
+  bitmap?: ImageBitmap;
 };
 
 export type EngineMessage =

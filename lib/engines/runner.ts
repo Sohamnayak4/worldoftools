@@ -34,6 +34,8 @@ export function runEngine(
   file: File,
   job: EngineJob,
   onProgress: (value: number, note?: string) => void,
+  bitmap?: ImageBitmap,
+  files?: File[],
 ): EngineRun {
   let worker: Worker | null = null;
   let settle: ((error: Error) => void) | null = null;
@@ -91,8 +93,9 @@ export function runEngine(
       );
     };
 
-    const request: EngineRequest = { type: "start", file, job };
-    worker.postMessage(request);
+    const request: EngineRequest = { type: "start", file, files, job, bitmap };
+    // The decoded picture is handed over, not copied.
+    worker.postMessage(request, bitmap ? [bitmap] : []);
   });
 
   return {

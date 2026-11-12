@@ -2,7 +2,7 @@ import type { Engine } from "../tools";
 
 // Engines that are built. The rest still run the fake engine.
 export function isFakeEngine(engine: Engine): boolean {
-  return engine !== "video";
+  return engine !== "video" && engine !== "image";
 }
 
 // Each worker script is its own chunk. The browser only downloads it when
@@ -10,6 +10,11 @@ export function isFakeEngine(engine: Engine): boolean {
 export function createEngineWorker(engine: Engine): Worker {
   if (engine === "video") {
     return new Worker(new URL("./video.worker.ts", import.meta.url), {
+      type: "module",
+    });
+  }
+  if (engine === "image") {
+    return new Worker(new URL("./image.worker.ts", import.meta.url), {
       type: "module",
     });
   }
