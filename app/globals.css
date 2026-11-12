@@ -92,3 +92,16 @@
     transition: none;
   }
 }
+
+/* Slightly larger type on wider screens. Everything sized in rem follows. */
+@media (min-width: 768px) {
+  html {
+    font-size: 106.25%;
+  }
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}

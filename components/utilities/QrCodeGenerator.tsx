@@ -154,6 +154,9 @@ export default function QrCodeGenerator() {
           type="button"
           className={primaryButton}
           disabled={!result.ok}
+          data-pm-goal="file_download"
+          data-pm-goal-tool="qr-code-generator"
+          data-pm-goal-format="png"
           onClick={() => {
             if (!result.ok) return;
             const canvas = document.createElement("canvas");
@@ -167,6 +170,9 @@ export default function QrCodeGenerator() {
           type="button"
           className={secondaryButton}
           disabled={!result.ok}
+          data-pm-goal="file_download"
+          data-pm-goal-tool="qr-code-generator"
+          data-pm-goal-format="svg"
           onClick={() => {
             if (!result.ok) return;
             save(new Blob([toSvg(result.data, size)], { type: "image/svg+xml" }), "qr-code.svg");

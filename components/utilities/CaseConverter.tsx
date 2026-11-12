@@ -59,7 +59,7 @@ export default function CaseConverter() {
         className={areaClass}
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <CopyButton text={result} />
+        <CopyButton text={result} tool="case-converter" />
       </div>
     </div>
   );

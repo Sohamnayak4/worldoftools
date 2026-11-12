@@ -19,6 +19,11 @@ STACK
 - No server route may ever receive a user's file.
 - Deployed on Vercel. Domain: worldof.tools.
 - No third-party scripts, trackers, or ad networks. Fonts self-hosted via next/font.
+  The one exception, decided by the owner on 2026-11-12, is the owner's
+  self-hosted Pixelmoth analytics (lib/site.ts, loaded in app/layout.tsx). It
+  sets two first-party cookies: pm_vid (visitor id, 1 year) and pm_sid
+  (session id, 30 minutes). The privacy page must name both. No other
+  analytics, and no consent banner.
 - Before using any library (ffmpeg.wasm, pdf-lib, pdf.js, HEIC decoders, WebCodecs
   helpers), read its current docs. Do not rely on memory for versions, APIs,
   or required headers.

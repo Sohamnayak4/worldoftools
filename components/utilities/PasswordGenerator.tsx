@@ -64,7 +64,7 @@ export default function PasswordGenerator() {
         <button type="button" className={primaryButton} disabled={problem !== null} onClick={make}>
           {result ? "Make new password" : "Make password"}
         </button>
-        <CopyButton text={result?.password ?? ""} label="Copy password" />
+        <CopyButton text={result?.password ?? ""} tool="password-generator" label="Copy password" />
       </div>
 
       <div className="mt-4">

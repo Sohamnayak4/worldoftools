@@ -36,6 +36,8 @@ type ToolShellProps = {
   cropPicker?: boolean;
   // Official photo specs to offer in the crop picker.
   cropSpecs?: CropSpec[];
+  // The tool's slug, sent with analytics goals.
+  slug: string;
 };
 
 type Phase =
@@ -114,6 +116,12 @@ function formatSeconds(seconds: number): string {
   return `${minutes} min ${Math.round(seconds - minutes * 60)} s`;
 }
 
+// "MP4, MOV, WEBM" from the tool's accepted file endings.
+function formatList(input: FileInput): string {
+  const names = [...new Set(input.extensions.map((ext) => ext.replace(".", "").toUpperCase()))];
+  return names.join(", ");
+}
+
 function typeLabel(file: File): string {
   const dot = file.name.lastIndexOf(".");
   return dot > 0 ? file.name.slice(dot + 1).toUpperCase() : "File";
@@ -168,6 +176,7 @@ export function ToolShell({
   sizePicker = false,
   cropPicker = false,
   cropSpecs,
+  slug,
 }: ToolShellProps) {
   const presetTargetBytes =
     preset.kind === "target-size" ? preset.targetBytes : undefined;
@@ -503,16 +512,6 @@ export function ToolShell({
         {status}
       </p>
 
-      {targetBytes !== undefined && (
-        <div className="mb-3">
-          <LimitGauge
-            limitBytes={targetBytes}
-            sizeBytes={shownSize}
-            scaleBytes={file?.size}
-          />
-        </div>
-      )}
-
       <div
         ref={panelRef}
         tabIndex={-1}
@@ -532,28 +531,46 @@ export function ToolShell({
             pickFiles(dropped, phase.name === "picked");
           }
         }}
-        className={`flex ${panelHeight} flex-col justify-center rounded-ctl border bg-surface p-4 ${
+        className={`rounded-ctl border bg-surface ${
           dragOver ? "border-accent-ink" : "border-line"
         }`}
       >
+        {targetBytes !== undefined && (
+          <div className="border-b border-line px-4 pt-3 pb-1">
+            <LimitGauge
+              limitBytes={targetBytes}
+              sizeBytes={shownSize}
+              scaleBytes={file?.size}
+            />
+          </div>
+        )}
+        <div className={`flex ${panelHeight} flex-col justify-center p-4`}>
         {phase.name === "idle" && (
-          <>
-            <div>
-              <button
-                type="button"
-                className={primaryButton}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {input.multiple ? `Choose ${input.noun}s` : `Choose ${input.noun}`}
-              </button>
-            </div>
-            <p className="mt-3">Or drop a file here. You can also paste one.</p>
-            <p className="mt-1 text-sm text-muted">
-              {input.maxBytesPhone !== undefined
-                ? `Files up to ${formatBytes(input.maxBytes)} on a computer and ${formatBytes(input.maxBytesPhone)} on a phone. Larger files take too long to process in a browser.`
-                : `Files up to ${formatBytes(input.maxBytes)}. Larger files take too long to process in a browser.`}
+          <div
+            className={`flex flex-1 flex-col items-center justify-center rounded-ctl border border-dashed px-4 py-8 text-center ${
+              dragOver ? "border-accent-ink" : "border-line"
+            }`}
+          >
+            <p className="font-heading text-lg font-semibold">
+              {input.multiple
+                ? `Drop ${input.noun}s here`
+                : `Drop ${input.article} ${input.noun} here`}
             </p>
-          </>
+            <p className="mt-1 mb-3 text-sm text-muted">or</p>
+            <button
+              type="button"
+              className={primaryButton}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {input.multiple ? `Choose ${input.noun}s` : `Choose ${input.noun}`}
+            </button>
+            <p className="mt-4 text-sm text-muted">{formatList(input)}</p>
+            <p className="mt-1 max-w-[46ch] text-sm text-muted">
+              {input.maxBytesPhone !== undefined
+                ? `Up to ${formatBytes(input.maxBytes)} on a computer and ${formatBytes(input.maxBytesPhone)} on a phone, because your device does the work. You can also paste a file.`
+                : `Up to ${formatBytes(input.maxBytes)}, because your device does the work. You can also paste a file.`}
+            </p>
+          </div>
         )}
 
         {file && phase.name !== "error" && (
@@ -747,6 +764,8 @@ export function ToolShell({
               <button
                 type="button"
                 className={primaryButton}
+                data-pm-goal="tool_start"
+                data-pm-goal-tool={slug}
                 disabled={
                   !targetValid ||
                   (wantsTrim && trim === null) ||
@@ -841,6 +860,8 @@ export function ToolShell({
                 href={phase.url}
                 download={phase.fileName}
                 className={primaryButton}
+                data-pm-goal="file_download"
+                data-pm-goal-tool={slug}
               >
                 Download file
               </a>
@@ -879,6 +900,7 @@ export function ToolShell({
             </div>
           </>
         )}
+        </div>
       </div>
 
     </div>

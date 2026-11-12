@@ -12,13 +12,79 @@ export type Category = "video" | "audio" | "image" | "pdf" | "text" | "utility";
 // "none" is for small tools that need no worker, like the word counter.
 export type Engine = "video" | "image" | "pdf" | "text" | "none";
 
-export const CATEGORIES: { id: Category; label: string }[] = [
-  { id: "video", label: "Video" },
-  { id: "audio", label: "Audio" },
-  { id: "image", label: "Image" },
-  { id: "pdf", label: "PDF" },
-  { id: "text", label: "Text" },
-  { id: "utility", label: "Utility" },
+export type CategoryInfo = {
+  id: Category;
+  // Short name for navigation.
+  label: string;
+  h1: string;
+  title: string;
+  metaDescription: string;
+  // Two or three plain sentences shown above the tool list.
+  intro: string;
+};
+
+// Each category has its own page at /<id>, built from this list.
+export const CATEGORIES: CategoryInfo[] = [
+  {
+    id: "video",
+    label: "Video",
+    h1: "Video tools",
+    title: "Video tools: compress, trim and convert in your browser",
+    metaDescription:
+      "Compress video to a size, trim it, convert MOV or WebM to MP4, remove the sound or make a GIF. Your browser does the work, so the video is not uploaded.",
+    intro:
+      "Compress, trim and convert videos on your own device. Your browser's built-in video encoder does the work, so the video is never uploaded. The presets for Discord, WhatsApp, email, Instagram, Telegram and Slack use each platform's published limit.",
+  },
+  {
+    id: "audio",
+    label: "Audio",
+    h1: "Audio tools",
+    title: "Audio tools: convert to MP3, compress and trim",
+    metaDescription:
+      "Convert WAV or M4A to MP3, make MP3 files smaller and trim audio in your browser. The sound file stays on your device.",
+    intro:
+      "Convert to MP3, make MP3 files smaller and cut audio to length. MP3, WAV and M4A files are trimmed without re-encoding, and MP3 files are made by the LAME encoder running in your browser.",
+  },
+  {
+    id: "image",
+    label: "Image",
+    h1: "Image tools",
+    title: "Image tools: compress, resize, crop and convert",
+    metaDescription:
+      "Compress images to 20, 50, 100 or 200 KB, resize, crop, and convert between JPG, PNG, WebP and HEIC. Photos are processed in your browser.",
+    intro:
+      "Compress images to a set size, resize and crop them, and convert between JPG, PNG, WebP, SVG and HEIC. There are also tools for passport and form photos, favicons, and removing the location and camera details from a photo.",
+  },
+  {
+    id: "pdf",
+    label: "PDF",
+    h1: "PDF tools",
+    title: "PDF tools: merge, split and convert to JPG",
+    metaDescription:
+      "Merge PDFs, split them into pages and turn pages into JPG pictures in your browser. Merging and splitting keep text selectable.",
+    intro:
+      "Join PDFs, split them into pages, and turn pages into JPG pictures. Merging and splitting copy pages as they are, so text stays selectable and nothing is redrawn.",
+  },
+  {
+    id: "text",
+    label: "Text",
+    h1: "Text tools",
+    title: "Text tools: word counter and case converter",
+    metaDescription:
+      "Count words, characters and reading time, or change text to sentence case, title case, camelCase and more. Nothing you type is sent anywhere.",
+    intro:
+      "Count words and characters, and change the case of text. What you type stays in your browser and is gone when you close the page.",
+  },
+  {
+    id: "utility",
+    label: "Utility",
+    h1: "Utility tools",
+    title: "Utility tools: QR codes, passwords, JSON and more",
+    metaDescription:
+      "Make QR codes and passwords, format JSON, encode Base64 and work out percentages. Each tool runs in your browser as you type.",
+    intro:
+      "Make QR codes and passwords, format JSON, encode and decode Base64, and work out percentages. These tools need no file and give answers as you type.",
+  },
 ];
 
 // What the tool does and with which fixed settings. Variant pages (for
@@ -137,6 +203,9 @@ export type Tool = {
   secondaryKeywords: string[];
   title: string;
   h1: string;
+  // One short line shown under the tool's name in lists. Adds a detail the
+  // name does not say. 56 characters or fewer.
+  blurb: string;
   metaDescription: string;
   // One or two plain sentences. Server-rendered, written to be quoted.
   shortAnswer: string;
@@ -543,6 +612,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video to specific size, free and private",
     h1: "Compress video to specific size",
+    blurb: "Type any target in MB, bitrate is set to fit it",
     metaDescription:
       "Compress a video to a specific size in MB. Pick the target, and the tool fits the file under it in your browser. No upload, no account.",
     shortAnswer:
@@ -610,6 +680,7 @@ export const tools: Tool[] = [
     ],
     title: "Trim video online, free and with no upload",
     h1: "Trim video online",
+    blurb: "Set start and end times, then cut the clip",
     metaDescription:
       "Trim a video online without uploading it. Pick the start and end, and the video trimmer cuts the clip in your browser. No watermark, no account.",
     shortAnswer:
@@ -687,6 +758,7 @@ export const tools: Tool[] = [
     ],
     title: "MOV to MP4 converter, free and with no upload",
     h1: "Convert MOV to MP4",
+    blurb: "iPhone and QuickTime clips, copied if already H.264",
     metaDescription:
       "Convert MOV to MP4 in your browser. iPhone and QuickTime videos become MP4 files that play everywhere. No upload, no watermark, no account.",
     shortAnswer:
@@ -763,6 +835,7 @@ export const tools: Tool[] = [
     ],
     title: "WebM to MP4 converter, free and with no upload",
     h1: "Convert WebM to MP4",
+    blurb: "Screen recordings, re-encoded to H.264 and AAC sound",
     metaDescription:
       "Convert WebM to MP4 in your browser. Screen recordings and downloaded WebM videos become MP4 files that play on any phone. No upload, no account.",
     shortAnswer:
@@ -831,6 +904,7 @@ export const tools: Tool[] = [
     ],
     title: "Remove audio from video, free and with no upload",
     h1: "Remove audio from video",
+    blurb: "Drops the sound track and copies the picture unchanged",
     metaDescription:
       "Remove audio from a video in your browser. The sound track is dropped and the picture is copied with no quality loss. No upload, no watermark.",
     shortAnswer:
@@ -901,6 +975,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for Discord, free and in your browser",
     h1: "Compress video for Discord",
+    blurb: "Targets the 20 MB limit, or a bigger size with Nitro",
     metaDescription:
       "Compress a video for Discord in your browser. Aim for the 20 MB free upload limit, or type a bigger size if you have Nitro. No upload, no account.",
     shortAnswer:
@@ -971,6 +1046,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for WhatsApp, free and in your browser",
     h1: "Compress video for WhatsApp",
+    blurb: "64 MB target works on slow connections as well as fast",
     metaDescription:
       "Compress a video for WhatsApp in your browser. The 64 MB target fits the video limit on slower connections too. No upload, no account.",
     shortAnswer:
@@ -1042,6 +1118,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for email, free and in your browser",
     h1: "Compress video for email",
+    blurb: "18 MB, under Gmail, Outlook, Yahoo and iCloud limits",
     metaDescription:
       "Compress a video for email in your browser. The 18 MB target sits under the attachment limits of Gmail, Outlook, Yahoo and iCloud. No upload.",
     shortAnswer:
@@ -1114,6 +1191,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for Instagram, free and in your browser",
     h1: "Compress video for Instagram",
+    blurb: "Targets 100 MB, the Stories figure in Meta's docs",
     metaDescription:
       "Compress a video for Instagram in your browser, down to the 100 MB Stories figure. The number comes from Meta's developer docs. No upload.",
     shortAnswer:
@@ -1184,6 +1262,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for Telegram, free and in your browser",
     h1: "Compress video for Telegram",
+    blurb: "2 GB limit, set a lower target for faster sends",
     metaDescription:
       "Compress a video for Telegram in your browser. Most clips already fit the 2 GB limit, so set a smaller target for faster sending. Nothing goes to a server.",
     shortAnswer:
@@ -1254,6 +1333,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress video for Slack, free and in your browser",
     h1: "Compress video for Slack",
+    blurb: "Slack allows 1 GB, smaller files upload faster",
     metaDescription:
       "Compress a video for Slack in your browser. Slack allows files up to 1 GB, and a smaller file is quicker for your team. Nothing goes to a server.",
     shortAnswer:
@@ -1319,6 +1399,7 @@ export const tools: Tool[] = [
     ],
     title: "MP4 to MP3 converter, free and with no upload",
     h1: "Convert MP4 to MP3",
+    blurb: "Takes the sound track out at 192 kbps by default",
     metaDescription:
       "Convert MP4 to MP3 in your browser. The sound track is taken out of the video and encoded as MP3 at the quality you pick. No upload, no account.",
     shortAnswer:
@@ -1378,6 +1459,7 @@ export const tools: Tool[] = [
     ],
     title: "WAV to MP3 converter, free and in your browser",
     h1: "Convert WAV to MP3",
+    blurb: "Large WAV recordings become far smaller MP3 files",
     metaDescription:
       "Convert WAV to MP3 in your browser. Large WAV recordings become small MP3 files at the quality you pick. Nothing is uploaded.",
     shortAnswer:
@@ -1438,6 +1520,7 @@ export const tools: Tool[] = [
     ],
     title: "M4A to MP3 converter, free and with no upload",
     h1: "Convert M4A to MP3",
+    blurb: "iPhone voice memos and AAC audio, re-encoded as MP3",
     metaDescription:
       "Convert M4A to MP3 in your browser. iPhone voice memos and AAC audio are decoded and encoded again as MP3. Nothing is uploaded.",
     shortAnswer:
@@ -1495,6 +1578,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress MP3, free and with no upload",
     h1: "Compress MP3",
+    blurb: "Default 96 kbps, half the size of a 192 kbps file",
     metaDescription:
       "Compress an MP3 in your browser by lowering its bitrate. The default is 96 kbps, and the file is never uploaded. No account needed.",
     shortAnswer:
@@ -1555,6 +1639,7 @@ export const tools: Tool[] = [
     ],
     title: "Trim audio online, free and in your browser",
     h1: "Trim audio online",
+    blurb: "MP3, WAV and M4A are cut without re-encoding",
     metaDescription:
       "Trim audio online in your browser. Set the start and end on a player or type the times. MP3, WAV and M4A stay in their format. No upload.",
     shortAnswer:
@@ -1622,6 +1707,7 @@ export const tools: Tool[] = [
     ],
     title: "Video to GIF converter, free and with no upload",
     h1: "Convert video to GIF",
+    blurb: "Clips up to 30 seconds, with width and frame rate set",
     metaDescription:
       "Turn a video clip into an animated GIF in your browser. Pick up to 30 seconds, then set the width and frame rate. Nothing is uploaded.",
     shortAnswer:
@@ -1683,6 +1769,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress GIF, free and with no upload",
     h1: "Compress GIF",
+    blurb: "Light, Medium or Strong cuts colors, width or frames",
     metaDescription:
       "Compress a GIF in your browser with three levels. Shrink the file by reducing colors, width or frames. Nothing is uploaded, no account needed.",
     shortAnswer:
@@ -1744,6 +1831,7 @@ export const tools: Tool[] = [
     ],
     title: "GIF to MP4 converter, free and with no upload",
     h1: "Convert GIF to MP4",
+    blurb: "Every frame encoded as H.264 with the original timing",
     metaDescription:
       "Convert GIF to MP4 in your browser. Every frame is encoded as H.264 video, and the MP4 is usually much smaller than the GIF. No upload.",
     shortAnswer:
@@ -1813,6 +1901,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress image to 20KB, free and in your browser",
     h1: "Compress image to 20KB",
+    blurb: "For signatures, simple scans and small icons",
     metaDescription:
       "Compress an image to 20KB in your browser for signatures, simple scans and small icons. No upload and no account. The JPG is checked before download.",
     shortAnswer:
@@ -1891,6 +1980,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress image to 50KB for forms, free and no upload",
     h1: "Compress image to 50KB",
+    blurb: "For form photos that must be under 50 KB",
     metaDescription:
       "Compress a photo to 50KB in your browser for form uploads. Type another size if your form asks for one. Nothing is uploaded, and no account is needed.",
     shortAnswer:
@@ -1969,6 +2059,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress image to 100KB for scans and ID photos",
     h1: "Compress image to 100KB",
+    blurb: "For scans, ID photos and profile pictures",
     metaDescription:
       "Compress an image to 100KB in your browser for document scans, ID photos and profile pictures. The result is checked under 100KB. No upload, no account.",
     shortAnswer:
@@ -2047,6 +2138,7 @@ export const tools: Tool[] = [
     ],
     title: "Compress image to 200KB for web and email uploads",
     h1: "Compress image to 200KB",
+    blurb: "For listings and blog images, less resizing needed",
     metaDescription:
       "Compress an image to 200KB in your browser for listings, blog images and email. Photos need less resizing at this size. No upload, no account.",
     shortAnswer:
@@ -2122,6 +2214,7 @@ export const tools: Tool[] = [
     ],
     title: "PNG to JPG converter, free and with no upload",
     h1: "Convert PNG to JPG",
+    blurb: "See-through areas turn white, photos shrink a lot",
     metaDescription:
       "Convert PNG to JPG in your browser at the quality you pick. JPG files of photos are usually much smaller. Nothing is uploaded, and no account is needed.",
     shortAnswer:
@@ -2183,6 +2276,7 @@ export const tools: Tool[] = [
     ],
     title: "JPG to PNG converter, free and with no upload",
     h1: "Convert JPG to PNG",
+    blurb: "Stores the picture losslessly, old detail stays lost",
     metaDescription:
       "Convert JPG to PNG in your browser. The picture is saved as a PNG, which stores every pixel it is given without further loss. Nothing is uploaded.",
     shortAnswer:
@@ -2252,6 +2346,7 @@ export const tools: Tool[] = [
     ],
     title: "WebP to JPG converter, free and with no upload",
     h1: "Convert WebP to JPG",
+    blurb: "For older apps and upload forms that refuse WebP",
     metaDescription:
       "Convert WebP to JPG in your browser, so older apps and upload forms accept the picture. Pick the quality. Nothing is uploaded or sent to a server.",
     shortAnswer:
@@ -2315,6 +2410,7 @@ export const tools: Tool[] = [
     ],
     title: "Image to WebP converter, free and with no upload",
     h1: "Convert image to WebP",
+    blurb: "Keeps transparency, not saved on Safari and iPhone",
     metaDescription:
       "Convert JPG, PNG and other images to WebP in your browser. WebP keeps transparency. Works in Chrome, Edge and Firefox. Nothing is uploaded.",
     shortAnswer:
@@ -2380,6 +2476,7 @@ export const tools: Tool[] = [
     ],
     title: "SVG to PNG converter, free and with no upload",
     h1: "Convert SVG to PNG",
+    blurb: "Pick 512 to 4096 px wide, redrawn sharp from the SVG",
     metaDescription:
       "Convert SVG to PNG in your browser at 512, 1024, 2048 or 4096 pixels wide. Transparent backgrounds stay transparent. Nothing is uploaded.",
     shortAnswer:
@@ -2445,6 +2542,7 @@ export const tools: Tool[] = [
     ],
     title: "Resize image online, free and with no upload",
     h1: "Resize image online",
+    blurb: "Type pixel width and height, or half or quarter size",
     metaDescription:
       "Resize an image online in pixels, right in your browser. Type a width and height, or use half or quarter size. Nothing is uploaded and no account is needed.",
     shortAnswer:
@@ -2513,6 +2611,7 @@ export const tools: Tool[] = [
     ],
     title: "Remove EXIF data from photos, free and with no upload",
     h1: "Remove EXIF data from a photo",
+    blurb: "Strips GPS location, date and camera model",
     metaDescription:
       "Remove EXIF data from a photo in your browser, including the GPS location, date and camera model. The picture is kept and nothing is uploaded.",
     shortAnswer:
@@ -2587,6 +2686,7 @@ export const tools: Tool[] = [
     ],
     title: "Convert HEIC to JPG online, with no upload",
     h1: "Convert HEIC to JPG",
+    blurb: "Open iPhone photos on Windows and in upload forms",
     metaDescription:
       "Convert an iPhone HEIC photo to a JPG in your browser. Choose the JPG quality and download the file. Your photo is not sent to a server.",
     shortAnswer:
@@ -2663,6 +2763,7 @@ export const tools: Tool[] = [
     ],
     title: "Crop image online, with no upload",
     h1: "Crop image online",
+    blurb: "Pick square or 16:9 shapes, or type exact pixels",
     metaDescription:
       "Crop an image online in your browser. Drag the box, pick a shape such as square or 16:9, or type exact pixel values. Your picture stays on your device.",
     shortAnswer:
@@ -2739,6 +2840,7 @@ export const tools: Tool[] = [
     ],
     title: "Image to PDF online, with no upload",
     h1: "Convert image to PDF",
+    blurb: "One image per page, set to A4, US Letter or image size",
     metaDescription:
       "Turn one image or several into a PDF, one image per page. Set the page order and choose A4, US Letter or the image's own shape. Made in your browser.",
     shortAnswer:
@@ -2816,6 +2918,7 @@ export const tools: Tool[] = [
     ],
     title: "Favicon generator, with a ZIP of site icons",
     h1: "Favicon generator",
+    blurb: "favicon.ico and app icons in a ZIP, with HTML tags",
     metaDescription:
       "Make a favicon.ico, Apple touch icon and web app icons from one square logo. Download them as a ZIP with the HTML tags to paste into your page head.",
     shortAnswer:
@@ -2891,6 +2994,7 @@ export const tools: Tool[] = [
     ],
     title: "Passport photo resize for UK and Canada online",
     h1: "Passport photo resize",
+    blurb: "UK and Canada online passport sizes, or a custom size",
     metaDescription:
       "Crop and resize a photo to a UK or Canada online passport size in your browser. Or type a custom size. Check the official page for the rules.",
     shortAnswer:
@@ -2960,6 +3064,7 @@ export const tools: Tool[] = [
     ],
     title: "Resize photo and signature for form online",
     h1: "Resize photo and signature for form",
+    blurb: "Photo and scanned signature to a form's size range",
     metaDescription:
       "Resize a photo and a scanned signature for an online application form, to the pixel size and file size range the form asks for. Done in your browser.",
     shortAnswer:
@@ -3028,6 +3133,7 @@ export const tools: Tool[] = [
     ],
     title: "Merge PDF files in your browser, with no upload",
     h1: "Merge PDF files",
+    blurb: "Up to 50 PDFs in your order, saved as merged.pdf",
     metaDescription:
       "Merge PDF files in the order you set. Pick up to 50 PDFs and download one file called merged.pdf. Runs in your browser, and nothing is uploaded.",
     shortAnswer:
@@ -3100,6 +3206,7 @@ export const tools: Tool[] = [
     ],
     title: "Split PDF into pages or a page range, in your browser",
     h1: "Split PDF",
+    blurb: "One file per page, or only the pages you type",
     metaDescription:
       "Split a PDF into one file per page, or keep only the pages you type, such as 1-3, 5, 8-10. Files are made in your browser and nothing is uploaded.",
     shortAnswer:
@@ -3172,6 +3279,7 @@ export const tools: Tool[] = [
     ],
     title: "PDF to JPG converter, made in your browser",
     h1: "Convert PDF to JPG",
+    blurb: "72, 150 or 300 DPI, up to 100 pages at a time",
     metaDescription:
       "Convert a PDF to JPG, one picture per page, at 72, 150 or 300 DPI. Pick pages, up to 100 at a time. Made in your browser, nothing is uploaded.",
     shortAnswer:
@@ -3247,6 +3355,7 @@ export const tools: Tool[] = [
     ],
     title: "Word counter for characters, words and reading time",
     h1: "Word counter",
+    blurb: "Words, characters and reading time as you type",
     metaDescription:
       "Count words, characters, sentences and paragraphs as you type. The page also estimates reading and speaking time. Nothing you type leaves your browser.",
     shortAnswer:
@@ -3316,6 +3425,7 @@ export const tools: Tool[] = [
     ],
     title: "Case converter for title case, camelCase and snake_case",
     h1: "Case converter",
+    blurb: "Sentence, Title, camelCase, snake_case and kebab-case",
     metaDescription:
       "Convert text to sentence case, lower case, UPPER CASE, Title Case, camelCase, snake_case or kebab-case. Copy the result with one button.",
     shortAnswer:
@@ -3381,6 +3491,7 @@ export const tools: Tool[] = [
     ],
     title: "QR code generator with PNG and SVG download",
     h1: "QR code generator",
+    blurb: "Downloads as PNG or SVG, and codes never expire",
     metaDescription:
       "Make a QR code from a link or any text. Choose the size and error correction, then download it as PNG or SVG. Codes are static and never expire.",
     shortAnswer:
@@ -3454,6 +3565,7 @@ export const tools: Tool[] = [
     ],
     title: "Password generator with a strength reading in bits",
     h1: "Password generator",
+    blurb: "Length 8 to 128, strength shown in bits, nothing saved",
     metaDescription:
       "Generate a random password from 8 to 128 characters. Pick uppercase, lowercase, numbers and symbols, and see its strength in bits. Nothing is saved.",
     shortAnswer:
@@ -3523,6 +3635,7 @@ export const tools: Tool[] = [
     ],
     title: "JSON formatter, minifier and validator",
     h1: "JSON formatter",
+    blurb: "Indent with 2 or 4 spaces or tabs, sort keys A to Z",
     metaDescription:
       "Format or minify JSON in your browser. Indent with 2 spaces, 4 spaces or tabs, sort keys A to Z, and see the line and column of any error.",
     shortAnswer:
@@ -3593,6 +3706,7 @@ export const tools: Tool[] = [
     ],
     title: "Base64 encode and decode text, with UTF-8 support",
     h1: "Base64 encode and decode",
+    blurb: "Text to Base64 and back, with a URL-safe option",
     metaDescription:
       "Encode text to Base64 or decode Base64 back to text in your browser. Accents and emoji work, and an option makes URL-safe Base64.",
     shortAnswer:
@@ -3662,6 +3776,7 @@ export const tools: Tool[] = [
     ],
     title: "Percentage calculator for three common percent questions",
     h1: "Percentage calculator",
+    blurb: "Percent of a number, share, or change between two",
     metaDescription:
       "Work out a percent of a number, what percent one number is of another, or the percentage change between two numbers. Each answer shows its formula.",
     shortAnswer:
@@ -3717,6 +3832,14 @@ export const tools: Tool[] = [
     ],
   },
 ];
+
+export function getCategory(id: string): CategoryInfo | undefined {
+  return CATEGORIES.find((category) => category.id === id);
+}
+
+export function toolsIn(category: Category): Tool[] {
+  return tools.filter((tool) => tool.category === category);
+}
 
 export function getTool(slug: string): Tool | undefined {
   return tools.find((tool) => tool.slug === slug);

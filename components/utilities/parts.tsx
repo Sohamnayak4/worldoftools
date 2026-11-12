@@ -14,7 +14,16 @@ export const secondaryButton =
 export const panelClass = "rounded-ctl border border-line bg-surface p-4";
 
 // A button that copies text and says so in words, for screen readers too.
-export function CopyButton({ text, label = "Copy text" }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  tool,
+  label = "Copy text",
+}: {
+  text: string;
+  // The tool's slug, sent with the analytics goal.
+  tool: string;
+  label?: string;
+}) {
   const [state, setState] = useState<"idle" | "done" | "failed">("idle");
   return (
     <>
@@ -22,6 +31,8 @@ export function CopyButton({ text, label = "Copy text" }: { text: string; label?
         type="button"
         className={secondaryButton}
         disabled={text === ""}
+        data-pm-goal="copy_result"
+        data-pm-goal-tool={tool}
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(text);

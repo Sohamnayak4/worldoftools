@@ -3,8 +3,10 @@
 // fits a platform that counts in 1,024s.
 export const KB = 1_000;
 export const MB = 1_000_000;
+export const GB = 1_000_000_000;
 
 export function formatBytes(bytes: number): string {
+  if (bytes >= GB) return `${trim(bytes / GB)} GB`;
   if (bytes >= MB) return `${trim(bytes / MB)} MB`;
   if (bytes >= KB) return `${trim(bytes / KB)} KB`;
   return `${bytes} bytes`;

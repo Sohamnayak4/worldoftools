@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
+import Script from "next/script";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { SITE_NAME, SITE_PROMISE, SITE_URL } from "@/lib/site";
+import {
+  PIXELMOTH_SRC,
+  PIXELMOTH_WEBSITE_ID,
+  SITE_NAME,
+  SITE_PROMISE,
+  SITE_URL,
+} from "@/lib/site";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -44,10 +51,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-dvh flex flex-col">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-16">
+        <main className="mx-auto w-full max-w-[1040px] flex-1 px-4 pb-16">
           {children}
         </main>
         <SiteFooter />
+        {/* Analytics. Loads once for the whole site and follows page changes
+            by itself, so no manual pageview calls are needed. */}
+        <Script
+          defer
+          data-website-id={PIXELMOTH_WEBSITE_ID}
+          src={PIXELMOTH_SRC}
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

@@ -83,7 +83,7 @@ export default function JsonFormatter() {
         className={`${areaClass} font-mono text-sm`}
       />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <CopyButton text={output} />
+        <CopyButton text={output} tool="json-formatter" />
       </div>
     </div>
   );

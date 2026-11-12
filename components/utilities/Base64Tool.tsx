@@ -65,7 +65,7 @@ export default function Base64Tool() {
       </label>
       <textarea id={outputId} value={output} readOnly spellCheck={false} className={areaClass} />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <CopyButton text={output} />
+        <CopyButton text={output} tool="base64-encode-decode" />
       </div>
     </div>
   );
