@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { Prose } from "@/components/Prose";
 import { SITE_NAME } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: `Privacy at ${SITE_NAME}`,
   description:
     "Files you use on worldof.tools are processed in your browser and never uploaded. This page lists the analytics, cookies and storage the site uses.",
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 const UPDATED = "12 November 2026";
 

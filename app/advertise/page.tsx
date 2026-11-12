@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { AdForm } from "@/components/AdForm";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { AD_PLANS, MAX_SPONSORS } from "@/lib/ads";
@@ -6,12 +7,12 @@ import { getSponsors } from "@/lib/sponsors";
 import { SITE_NAME } from "@/lib/site";
 import { tools } from "@/lib/tools";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: `Advertise on ${SITE_NAME}`,
   description:
     "Show your product in a sponsored spot on worldof.tools for 7 or 30 days. A plain link with your name and one line of text. No tracking.",
-  alternates: { canonical: "/advertise" },
-};
+  path: "/advertise",
+});
 
 export default async function AdvertisePage() {
   const places = MAX_SPONSORS - (await getSponsors()).length;

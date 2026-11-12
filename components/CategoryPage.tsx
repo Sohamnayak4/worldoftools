@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Breadcrumb } from "./Breadcrumb";
+import { categoryJsonLd, jsonLdHtml } from "@/lib/jsonld";
 import { SITE_PROMISE } from "@/lib/site";
 import { type CategoryInfo, CATEGORIES, toolsIn } from "@/lib/tools";
 
@@ -9,6 +10,10 @@ export function CategoryPage({ category }: { category: CategoryInfo }) {
   const others = CATEGORIES.filter((item) => item.id !== category.id);
   return (
     <article className="mx-auto max-w-[880px]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdHtml(categoryJsonLd(category, list))}
+      />
       <Breadcrumb trail={[]} />
       <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{category.h1}</h1>
       <p className="mt-3 max-w-[65ch]">{category.intro}</p>

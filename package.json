@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit": "tsc lib/tools.ts --outDir .audit --module nodenext --moduleResolution nodenext --target es2022 --skipLibCheck && node scripts/audit-registry.mjs"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",

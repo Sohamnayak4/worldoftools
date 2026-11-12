@@ -10,6 +10,7 @@ import {
   SITE_PROMISE,
   SITE_URL,
 } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -26,9 +27,11 @@ const hanken = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: `${SITE_NAME}: free file tools that run in your browser`,
-  description: `Free tools to compress, convert and resize files. Everything runs in your browser. ${SITE_PROMISE}`,
-  alternates: { canonical: "/" },
+  ...pageMeta({
+    title: `${SITE_NAME}: free file tools that run in your browser`,
+    description: `Free tools to compress, convert and resize video, images, audio and PDFs. Everything runs in your browser. ${SITE_PROMISE}`,
+    path: "/",
+  }),
 };
 
 // Pages show current sponsor ads, so they refresh every 10 minutes. The Dodo

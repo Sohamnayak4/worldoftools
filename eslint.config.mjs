@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Compiled copy of the registry made by `npm run audit`.
+    ".audit/**",
   ]),
 ]);
 

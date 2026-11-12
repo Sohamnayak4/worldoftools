@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AdSlots } from "@/components/AdSlots";
 import { ToolIndex } from "@/components/ToolIndex";
 import { CategoryIcon, ToolIcon } from "@/components/ToolIcon";
+import { jsonLdHtml, siteJsonLd } from "@/lib/jsonld";
 import { navCategories, navTools } from "@/lib/nav";
 import { getTool, tools } from "@/lib/tools";
 
@@ -54,6 +55,7 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-[1120px]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(siteJsonLd())} />
       <div className="mt-10 lg:mt-14">
         <ToolIndex
           categories={navCategories}

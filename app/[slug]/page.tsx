@@ -9,6 +9,8 @@ import { ToolShell } from "@/components/ToolShell";
 import { UtilityTool } from "@/components/UtilityTool";
 import { isWidgetName } from "@/lib/widgets";
 import { specsFor } from "@/lib/photoSpecs";
+import { jsonLdHtml, toolJsonLd } from "@/lib/jsonld";
+import { pageMeta } from "@/lib/seo";
 import { stripFor } from "@/lib/strip";
 import {
   CATEGORIES,
@@ -35,19 +37,19 @@ export async function generateMetadata({
   const { slug } = await params;
   const category = getCategory(slug);
   if (category) {
-    return {
+    return pageMeta({
       title: category.title,
       description: category.metaDescription,
-      alternates: { canonical: `/${category.id}` },
-    };
+      path: `/${category.id}`,
+    });
   }
   const tool = getTool(slug);
   if (!tool) return {};
-  return {
+  return pageMeta({
     title: tool.title,
     description: tool.metaDescription,
-    alternates: { canonical: `/${tool.slug}` },
-  };
+    path: `/${tool.slug}`,
+  });
 }
 
 export default async function ToolPage({ params }: PageProps<"/[slug]">) {
@@ -63,6 +65,7 @@ export default async function ToolPage({ params }: PageProps<"/[slug]">) {
 
   return (
     <article className="mx-auto max-w-[880px]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(toolJsonLd(tool))} />
       <Breadcrumb trail={[{ href: `/${tool.category}`, label: getCategory(tool.category)?.h1 ?? "Tools" }]} />
       <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{tool.h1}</h1>
       <p className="mt-3 max-w-[65ch]">{tool.shortAnswer}</p>

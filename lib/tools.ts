@@ -621,7 +621,7 @@ export const tools: Tool[] = [
       "Pick a video from your phone or computer. It stays on your device.",
       "Type the target size in MB. The default is 10 MB.",
       "The tool divides the target size by the video length to get a bitrate, and leaves a small safety margin.",
-      "If that bitrate is too low to look good, it also lowers the resolution to reduce the video file size cleanly.",
+      "If that bitrate is too low to look good, it also lowers the resolution to reduce video file size cleanly.",
       "It checks the result. If the file is over the target, it tries again lower. Then you download it.",
     ],
     facts: [
@@ -686,7 +686,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To trim a video online, pick the file, set the start and end times, and press Trim video. The clip is cut in your browser, so the video is never uploaded.",
     howItWorks: [
-      "Pick a video from your phone or computer. It stays on your device.",
+      "Choose a video from your phone or computer. It stays on your device.",
       "Play the preview and pause where the clip should begin, then press Set start to player time. Do the same for the end.",
       "You can also type the times, like 0:05 and 0:20.",
       "Press Trim video. When the cut lands within half a second of a clean cutting point, the video trimmer copies the clip with no quality loss. Otherwise it re-encodes the clip for an exact cut.",
@@ -764,7 +764,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To convert MOV to MP4, pick the MOV file and press Convert to MP4. If the video inside is already H.264, it is copied into an MP4 with no quality loss, which takes a few seconds.",
     howItWorks: [
-      "Pick a MOV file, such as an iPhone video or a QuickTime recording.",
+      "To convert MOV to MP4, pick a MOV file, such as an iPhone video or a QuickTime recording.",
       "The tool reads what is inside. MOV and MP4 are both containers, and they can hold the same kind of video.",
       "If the video is H.264, it is moved into an MP4 as it is. Nothing is re-encoded.",
       "If the video is HEVC, which newer iPhones record, it is converted to H.264 so the MP4 plays on Windows, Android and older devices.",
@@ -841,7 +841,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To convert WebM to MP4, pick the WebM file and press Convert to MP4. The video is re-encoded to H.264 and the sound to AAC, which is the combination that plays on iPhones, TVs and in every editor.",
     howItWorks: [
-      "Pick a WebM file, such as a browser screen recording.",
+      "To convert WebM to MP4, pick a WebM file, such as a browser screen recording.",
       "The tool decodes the VP8, VP9 or AV1 video inside it.",
       "It re-encodes the video to H.264 and the sound to AAC. This is a real conversion, so it takes longer than a simple copy.",
       "The bitrate is set a little above the original so the picture looks the same.",
@@ -910,7 +910,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To remove audio from a video, pick the file and press Remove audio. The sound track is dropped and the picture is copied unchanged, so there is no quality loss and it takes seconds.",
     howItWorks: [
-      "Pick a video from your phone or computer.",
+      "Select a video from your phone or computer.",
       "The tool separates the picture from the sound. They are stored as two tracks in the file.",
       "It writes a new MP4 with only the picture track. The video is not re-encoded.",
       "Download the silent video. It is a little smaller, because the sound is gone.",
@@ -982,7 +982,7 @@ export const tools: Tool[] = [
       "Discord accepts uploads up to 20 MB without Nitro. To compress a video for Discord, pick the file, keep the 20 MB target or type a bigger one if your plan allows it, and press Compress video.",
     howItWorks: [
       "Choose the clip you want to share. Your browser reads it on your device.",
-      "The target starts at 20 MB, the free upload limit. Type a larger size if your Nitro plan allows it.",
+      "The target starts at 20 MB, the Discord video size limit for free accounts. Type a larger size if your Nitro plan allows it.",
       "The tool sets a bitrate from that size and the clip length, with a small margin below it.",
       "If the bitrate would be too low for a clean picture, the resolution is lowered first.",
       "The output is checked against the target. If it is still over, the tool tries a lower bitrate. Then download the MP4.",
@@ -1053,7 +1053,7 @@ export const tools: Tool[] = [
       "WhatsApp sends a video as media up to 64 MB on a slower connection and up to 100 MB on a faster one. To compress a video for WhatsApp, keep the 64 MB target, which fits on both.",
     howItWorks: [
       "Choose the video you want to send. Your browser reads it, and nothing goes to WhatsApp yet.",
-      "The 64 MB target is the lower of the two WhatsApp video limits, so one file works on both connection speeds.",
+      "The 64 MB target is the lower of the two WhatsApp video size limits, so one file works on both connection speeds.",
       "The tool sets the bitrate from that target and the video length, with a small margin.",
       "If the bitrate is too low for a clean picture, the resolution comes down first.",
       "The result is checked against the target. If it is too big, a lower bitrate is tried. Then download the MP4.",
@@ -1125,7 +1125,7 @@ export const tools: Tool[] = [
       "Gmail, Outlook.com, Yahoo Mail and iCloud Mail take 20 to 25 MB of attachments in one message. To compress a video for email, keep the 18 MB target, which leaves room for the extra size an attachment gains when it is sent.",
     howItWorks: [
       "Choose the video you want to attach. It stays on your device while it is compressed.",
-      "The target is 18 MB, which sits under the 20 to 25 MB attachment limits.",
+      "The target is 18 MB, which sits under the 20 to 25 MB email video attachment size limits.",
       "The bitrate is set from that target and the video length, with a margin for the extra size of sending.",
       "If the picture would look too blocky, the resolution goes down first.",
       "The result is checked. If it is still over 18 MB, it is compressed again at a lower bitrate. Then attach the MP4 to your message.",
@@ -1197,8 +1197,8 @@ export const tools: Tool[] = [
     shortAnswer:
       "Meta's developer documentation sets 100 MB as the upload size for Instagram Stories and 300 MB for Reels. The Instagram app does not publish its own number, so this page uses the 100 MB Stories figure as the target.",
     howItWorks: [
-      "Choose the video you want to post. Your browser reads it on your device.",
-      "The target is 100 MB, the Stories figure from Meta's developer documentation.",
+      "Choose the video you want to post. The file is read on your device.",
+      "The target is 100 MB, the Instagram story video size given in Meta's developer documentation.",
       "The tool works out a bitrate from that target and the length of the clip, with a small margin.",
       "When the bitrate is too low to look clean, the resolution is lowered first.",
       "The file is checked against the target and compressed again at a lower bitrate if needed. Download the MP4 and upload it in Instagram.",
@@ -1268,11 +1268,11 @@ export const tools: Tool[] = [
     shortAnswer:
       "Telegram accepts files up to 2 GB on a free account, and most videos already fit. To compress a video for Telegram, type a smaller target such as 50 MB when you want a faster upload or less mobile data.",
     howItWorks: [
-      "Choose the clip. Most clips are already under the 2 GB limit, so the default target is set there.",
+      "To send big video on Telegram, choose the clip. Most clips are already under the 2 GB limit, so the default target is set there.",
       "Type a smaller target, such as 50 MB, if you want a quicker upload or less mobile data.",
       "The tool sets the bitrate from the target and the clip length, with a small margin.",
       "If the picture would look blocky at that bitrate, the resolution comes down first.",
-      "The output is checked against the target. Download the MP4 and send it in Telegram.",
+      "The finished file is compared with the target. Download the MP4 and send it in Telegram.",
     ],
     facts: [
       limitFact("telegram"),
@@ -1339,14 +1339,18 @@ export const tools: Tool[] = [
     shortAnswer:
       "Slack lets a member or guest add files up to 1 GB, which is rarely the problem. To compress a video for Slack, type a smaller target such as 50 MB so it uploads and plays faster for teammates.",
     howItWorks: [
-      "Choose the video you want to share in the channel. It is read on your device.",
+      "To send video in Slack, choose the video you want to share in the channel. It is read on your device.",
       "The default target is 1000 MB, which matches the Slack limit. Type a smaller size to make the file quicker for teammates to open.",
       "The tool sets the bitrate from the target and the video length, leaving a small margin.",
       "When the bitrate would be too low for a clean picture, the resolution is lowered first.",
-      "The result is checked against the target. If it is still over, a lower bitrate is tried. Download the MP4 and drop it into Slack.",
+      "Each result is measured against the target. If it is still over, a lower bitrate is tried. Download the MP4 and drop it into Slack.",
     ],
     facts: [
       limitFact("slack"),
+      {
+        label: "Why compress for Slack",
+        value: "Smaller files upload faster and open sooner for teammates in the channel",
+      },
       {
         label: "Target on this page",
         value:
@@ -1406,7 +1410,7 @@ export const tools: Tool[] = [
       "To convert MP4 to MP3, pick the video and press Convert to MP3. The tool takes the sound track out of the video and encodes it as an MP3 at 192 kbps by default, and the picture is dropped.",
     howItWorks: [
       "Pick an MP4, MOV, WebM or other video from your device.",
-      "The tool finds the sound track inside the file and leaves the picture out.",
+      "To extract audio from video, the tool finds the sound track inside the file and leaves the picture out.",
       "It decodes that sound and encodes it as MP3 at the bitrate you chose. The default is 192 kbps.",
       "If the video has no sound track, the tool stops and shows a clear error.",
       "Download the MP3 file.",
@@ -1467,7 +1471,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick a WAV recording from your device. WAV is uncompressed, so these files are often large.",
       "WAV needs no decoder, so the file can be read by every current browser.",
-      "The tool encodes the sound as MP3 with the LAME encoder, which runs inside your browser.",
+      "To convert WAV to MP3, the tool encodes the sound with the LAME encoder, which runs inside your browser.",
       "Pick the bitrate. The default is 192 kbps.",
       "Download the MP3.",
     ],
@@ -1527,7 +1531,7 @@ export const tools: Tool[] = [
       "To convert M4A to MP3, pick the M4A file and press Convert to MP3. The tool decodes the AAC sound inside and encodes it again as an MP3 at 192 kbps by default.",
     howItWorks: [
       "Pick an M4A file, such as an iPhone voice memo or a song bought from Apple Music.",
-      "The tool decodes the AAC sound stored inside the file.",
+      "To convert M4A to MP3, the tool decodes the AAC sound stored inside the file.",
       "It encodes the sound again as MP3 at the bitrate you chose.",
       "A bitrate above the original adds no detail, because the sound cannot gain what it never had.",
       "Download the MP3.",
@@ -1585,7 +1589,7 @@ export const tools: Tool[] = [
       "To compress an MP3, pick the file and press Compress MP3. The tool re-encodes it at 96 kbps by default, and file size follows bitrate, so that is half the size of a 192 kbps MP3.",
     howItWorks: [
       "Pick an MP3 from your device.",
-      "Choose a lower bitrate. The default is 96 kbps.",
+      "Choose a lower MP3 bitrate. The default is 96 kbps.",
       "The tool decodes the MP3 and encodes it again at the bitrate you chose.",
       "If the bitrate you chose is not lower than the original, the tool stops and says so.",
       "Download the smaller MP3.",
@@ -1647,7 +1651,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick an audio file from your device. MP3, WAV, M4A, AAC, OGG and FLAC all work.",
       "Listen in the player and set the start and end. You can also type times such as 0:05 and 1:30.",
-      "Press Trim audio. The part from start to end is kept and the rest is cut away.",
+      "Press Trim audio. This audio trimmer keeps the part from start to end and cuts the rest away.",
       "MP3, WAV and M4A are copied without re-encoding. OGG and FLAC are saved as MP3.",
       "Download the trimmed file.",
     ],
@@ -1680,7 +1684,7 @@ export const tools: Tool[] = [
       },
       {
         q: "Can I keep two parts of a song and cut out the middle?",
-        a: "Not in one step. This tool keeps one part, from the start time to the end time. Trim twice to make two separate files.",
+        a: "Not in one step. Each trim saves a single stretch of the recording, from your start time to your end time. Trim twice to make two separate files.",
       },
       {
         q: "Can I type exact times instead of using the player?",
@@ -1714,7 +1718,7 @@ export const tools: Tool[] = [
       "To convert video to GIF, pick the video, choose up to 30 seconds with the preview player, and press Make GIF. The clip becomes an animated GIF in your browser, with no sound.",
     howItWorks: [
       "Pick a video from your device.",
-      "Use the preview player to choose the start and end. A GIF can be up to 30 seconds long.",
+      "To make a GIF from video, use the preview player to choose the start and end. A GIF can be up to 30 seconds long.",
       "Choose a width of 320, 480 or 640 pixels, and a frame rate from 10 to 25 frames per second.",
       "Each frame gets its own palette of up to 256 colors. Pixels that stay the same between frames are left out, which keeps the file smaller.",
       "Download the GIF.",
@@ -1777,7 +1781,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick a GIF from your device.",
       "Choose a level: Light, Medium or Strong. Medium is the default.",
-      "The tool reduces the colors in each frame. Pixels that do not change between frames are left out.",
+      "To reduce GIF file size, the tool reduces the colors in each frame. Pixels that do not change between frames are left out.",
       "Strong also scales the width to half and keeps every second frame. The animation speed stays the same.",
       "If the result is not smaller, the tool says so. Some GIFs were already optimized and cannot shrink much further.",
     ],
@@ -1837,9 +1841,9 @@ export const tools: Tool[] = [
     shortAnswer:
       "To convert GIF to MP4, pick the GIF and press Convert to MP4. Every frame is drawn and encoded as H.264 video with the original timing, and the result is usually far smaller than the GIF.",
     howItWorks: [
-      "Pick a GIF from your device.",
+      "Choose the GIF file you want to convert. It is read from your device.",
       "The tool draws each frame of the animation in order.",
-      "It encodes the frames as H.264 video inside an MP4, keeping the original frame timing.",
+      "To convert GIF to MP4, the tool encodes the frames as H.264 video inside an MP4, keeping the original frame timing.",
       "Transparent areas become white, because MP4 has no transparency.",
       "Download the MP4.",
     ],
@@ -1907,8 +1911,8 @@ export const tools: Tool[] = [
     shortAnswer:
       "Some forms accept signature scans only up to 20KB. Pick the image, keep the 20KB target, and press Compress image to get a small JPG that is checked before you download it.",
     howItWorks: [
-      "Pick the signature scan, simple document or icon. Your browser reads it on your device.",
-      "The target starts at 20KB. Type a different size if your form asks for another limit.",
+      "Pick the signature scan, simple document or icon. The image is read on your device.",
+      "This 20kb image compressor starts the target at 20KB. Type a different size if your form asks for another limit.",
       "The tool lowers JPEG quality first, down to 60, and keeps the highest quality that fits.",
       "If the file is still too big at quality 60, the picture is made smaller in pixels and the search runs again.",
       "The result is checked to be under the target and shown in a preview. Then download the JPG.",
@@ -1987,7 +1991,7 @@ export const tools: Tool[] = [
       "Many forms cap the photo at 50KB. Pick the picture, keep the 50KB target, and press Compress image. A large phone photo is resized a lot to fit, so check the preview before you download.",
     howItWorks: [
       "Pick the photo you need to upload. A phone photo works, and so does a scan.",
-      "The target is 50KB. Type a different number if the form asks for another size.",
+      "The target is 50KB, set by this 50kb image compressor. Type a different number if the form asks for another size.",
       "Quality is tried from 92 down to 60, which keeps as much detail as the size allows.",
       "A large phone photo may still be too big at quality 60, so its pixel size is cut and the search runs again.",
       "The result is checked to be under 50KB and shown in a preview. Download the JPG when it looks right.",
@@ -2066,7 +2070,7 @@ export const tools: Tool[] = [
       "Many forms and websites set a 100KB limit on scanned documents, ID photos and profile pictures. Pick the file, keep the 100KB target, and press Compress image to get a JPG under that size.",
     howItWorks: [
       "Pick the scan, ID photo or profile picture. The file stays on your device.",
-      "The target is 100KB. Type another size if the site sets a different limit.",
+      "To reduce image size to 100kb, keep the target at 100KB. Type another size if the site sets a different limit.",
       "Quality is lowered from 92 toward 60, and the highest value that fits is kept.",
       "If the image is still too big, its pixel size is reduced and the search runs again.",
       "The result is checked against 100KB and shown in a preview. Then download the JPG.",
@@ -2145,10 +2149,10 @@ export const tools: Tool[] = [
       "At 200KB a photo still looks good on a phone or in an email. Pick the image, keep the 200KB target, and press Compress image, which needs far less resizing than the smaller targets.",
     howItWorks: [
       "Pick the listing photo, blog image or upload you need to shrink.",
-      "The target starts at 200KB. Type another size if your site or email service sets a different limit.",
+      "The 200kb image compressor starts the target at 200KB. Type another size if your site or email service sets a different limit.",
       "Quality is tried from 92 down to 60. At this size the best quality often fits without changing the pixel size.",
       "Only images that are still too big get smaller in pixels, and the search runs again.",
-      "The result is checked to be under 200KB and shown in a preview. Download the JPG when it looks right.",
+      "The file is checked to be under 200KB and shown in a preview. Then download the JPG once it looks right.",
     ],
     facts: [
       {
@@ -2222,7 +2226,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick a PNG image from your phone or computer. It stays on your device.",
       "Choose a quality: High, Balanced or Lower.",
-      "The tool draws the picture onto a canvas and saves it as a JPG at that quality.",
+      "To convert PNG to JPG, the tool draws the picture onto a canvas and saves it as a JPG at that quality.",
       "Any see-through areas are filled with white, because JPG cannot store transparency.",
       "Download the JPG.",
     ],
@@ -2284,7 +2288,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick a JPG or JPEG photo from your device.",
       "The tool draws the picture onto a canvas in your browser.",
-      "It saves that picture as a PNG. From this point on, nothing more is lost.",
+      "To convert JPG to PNG, it saves that picture as a PNG. From this point on, nothing more is lost.",
       "The PNG is usually larger than the JPG, because it stores more data.",
       "Download the PNG.",
     ],
@@ -2352,7 +2356,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To convert WebP to JPG, pick the WebP file, choose a quality, and press Convert to JPG. JPG is accepted by older apps, editors and upload forms that may refuse WebP, and the file is made in your browser.",
     howItWorks: [
-      "Pick a WebP image, such as one saved from a website.",
+      "To convert WebP to JPG, pick a WebP image, such as one saved from a website.",
       "Choose a JPG quality. High is the default.",
       "The tool draws the picture and saves it as a JPG at that quality.",
       "A see-through area becomes white, because JPG has no transparency.",
@@ -2416,8 +2420,8 @@ export const tools: Tool[] = [
     shortAnswer:
       "To convert an image to WebP, pick the file and press Convert to WebP. Transparency is kept, but Safari, iPhone and iPad cannot save WebP from a canvas, so the tool shows a clear message on those browsers instead of a file.",
     howItWorks: [
-      "Pick a JPG, PNG, GIF, BMP or AVIF image from your device.",
-      "Choose a quality: High, Balanced or Lower.",
+      "To convert image to WebP, pick a JPG, PNG, GIF, BMP or AVIF image from your device.",
+      "Choose a WebP quality: High, Balanced or Lower.",
       "The tool draws the picture and saves it as WebP at that quality. Transparent areas stay transparent.",
       "On Safari, iPhone and iPad the tool stops and shows a message, because Safari cannot save WebP from a canvas.",
       "Download the WebP file.",
@@ -2484,7 +2488,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick an SVG logo, icon or drawing from your device.",
       "Choose the PNG width. Pick the size set in the SVG, or 512, 1024, 2048 or 4096 pixels.",
-      "The tool draws the SVG at that width. The height follows the SVG's proportions.",
+      "To convert SVG to PNG, the tool draws the SVG at that width. The height follows the SVG's proportions.",
       "Transparent areas stay transparent in the PNG.",
       "Download the PNG.",
     ],
@@ -2551,7 +2555,7 @@ export const tools: Tool[] = [
       "Pick an image. The page shows a preview and the original size in pixels.",
       "Type a width or a height. Keep proportions is on by default, so the other side fills in by itself.",
       "Or press Half size or Quarter size to fill both fields at once.",
-      "Press Resize image. The picture is redrawn at the new size in your browser.",
+      "Press Resize image. This image resizer redraws the picture at the new size in your browser.",
       "Download the resized image.",
     ],
     facts: [
@@ -2618,7 +2622,7 @@ export const tools: Tool[] = [
       "To remove EXIF data from a photo, pick the image and press Remove metadata. For JPG and PNG the metadata is cut out of the file without touching the picture, so the location, date and camera details are gone.",
     howItWorks: [
       "Pick a photo from your phone or computer. It stays on your device.",
-      "The tool looks for the metadata blocks inside the file, such as EXIF.",
+      "To strip photo metadata, the tool looks for the metadata blocks inside the file, such as EXIF.",
       "For JPG and PNG, those blocks are cut out and the picture data is left unchanged.",
       "A JPG stored sideways is redrawn upright at quality 95, so the photo does not turn.",
       "Download the cleaned file.",
@@ -2694,7 +2698,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Pick a HEIC or HEIF photo from your iPhone or computer.",
       "Choose a JPG quality: 92 for the largest file, 80 balanced, or 60 for the smallest.",
-      "Press Convert to JPG. The photo is decoded in your browser.",
+      "Press Convert to JPG. This heic image converter decodes the photo in your browser.",
       "The photo is turned the right way up before it is saved.",
       "Download the JPG file when the conversion is done.",
     ],
@@ -2772,7 +2776,7 @@ export const tools: Tool[] = [
       "Pick an image. The page shows it with a crop box on top.",
       "Drag the box to move it, or drag a corner to resize it.",
       "Choose a shape: free, 1:1 square, 4:3, 3:4, 16:9 or 9:16.",
-      "Or type the left, top, width and height in pixels for an exact box.",
+      "To crop image to pixel size, type the left, top, width and height in pixels for an exact box.",
       "Press Crop image, then download the result.",
     ],
     facts: [
@@ -2846,7 +2850,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To make a PDF from images, pick one picture or several, put them in order, and press Make PDF. Each image becomes one page, and the file is built in your browser.",
     howItWorks: [
-      "Pick one image or several at once. They appear in a list.",
+      "Pick one image or several to combine images into PDF. They appear in a list.",
       "Use Move up and Move down to set the page order, or Remove to drop an image from the list.",
       "Add more files with the Add more files button if you need them.",
       "Choose the page size: the image's own shape, A4 or US Letter.",
@@ -2924,7 +2928,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To make a favicon, pick a square logo as a PNG, SVG, JPG or WebP file and press Make favicon. The tool builds a ZIP of icon files and a text file with the HTML tags for your page head.",
     howItWorks: [
-      "Pick a logo as a PNG, SVG, JPG or WebP file. A square picture works best.",
+      "To make favicon from logo, pick the logo as a PNG, SVG, JPG or WebP file. A square picture works best.",
       "The tool draws each icon size in your browser.",
       "Press Make favicon to build the ZIP.",
       "Open the text file and paste its tags into the head of your pages.",
@@ -3000,7 +3004,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To resize a passport photo online, pick a preset or Custom size, drag the crop box so the head and shoulders are inside, and press Make passport photo. The tool crops the photo, resizes it to the chosen pixel size, and saves a JPG.",
     howItWorks: [
-      "Choose a preset: UK passport online application or Canada passport online renewal. Or choose Custom size.",
+      "Choose a preset for your passport photo size online: UK passport online application or Canada passport online renewal. Or choose Custom size.",
       "Pick your photo. A crop box in the right shape appears on it.",
       "Drag the box so the head and shoulders are inside it.",
       "Press Make passport photo. The tool crops the photo and resizes it to the preset's pixel size.",
@@ -3073,7 +3077,7 @@ export const tools: Tool[] = [
       "Choose a preset: UPSC online application photograph or UPSC online application signature. Or choose Custom size.",
       "Pick the photo and drag the crop box over the face.",
       "Press Resize for form. The tool resizes that part and saves a JPG.",
-      "Repeat the steps for the signature, one picture at a time.",
+      "To resize signature for online form, repeat the steps for the signature, one picture at a time.",
       "Check the size and file size against your form's instructions.",
     ],
     facts: [
@@ -3142,7 +3146,7 @@ export const tools: Tool[] = [
       "Pick two or more PDFs, up to 50 in all. They appear in a list.",
       "Use Up and Down to set the order, or Remove to drop a file from the list.",
       "Press Add more files if you need to add another PDF.",
-      "Press Merge PDFs. The pages are joined in the order of the list.",
+      "Press Merge PDFs to put pdfs together. The pages are joined in the order of the list.",
       "Download merged.pdf.",
     ],
     facts: [
@@ -3212,7 +3216,7 @@ export const tools: Tool[] = [
     shortAnswer:
       "To split a PDF, pick the file and choose how to split it. You can save every page as its own PDF, or type the pages to keep and get them back in one new PDF.",
     howItWorks: [
-      "Pick one PDF. It is read in your browser.",
+      "To extract pages from PDF, pick one PDF. It is read in your browser.",
       "Choose How to split: every page as its own PDF, or only the pages you type.",
       "For typed pages, enter a list such as 1-3, 5, 8-10 in the Pages to keep field.",
       "Press Split PDF and download the result.",
@@ -3288,7 +3292,7 @@ export const tools: Tool[] = [
       "Pick a PDF. PDF.js, the PDF reader made by Mozilla, opens it in your browser.",
       "Choose a resolution: 72 DPI for a small file, 150 DPI for sharp on screen, or 300 DPI for printing.",
       "Leave Pages empty for all pages, or type pages like 1-3, 5.",
-      "Press Convert to JPG. A one-page result downloads as a JPG, and more pages download as one ZIP file.",
+      "To convert PDF pages to images, press Convert to JPG. A one-page result downloads as a JPG, and more pages download as one ZIP file.",
     ],
     facts: [
       RUNS_LOCALLY,
@@ -3362,7 +3366,7 @@ export const tools: Tool[] = [
       "To count words, type or paste your text into the box. The word, character, sentence and paragraph counts update as you type.",
     howItWorks: [
       "Type or paste your text into the box.",
-      "The counts update with every change, so you can see them move as you write.",
+      "This character counter updates the counts with every change, so you can see them move as you write.",
       "Read the reading time at 200 words a minute and the speaking time at 130 words a minute.",
       "Close the page when you are done. The text is not kept after that.",
     ],
@@ -3433,7 +3437,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Paste your text into the box.",
       "Press one of the seven buttons: Sentence case, lower case, UPPER CASE, Title Case, camelCase, snake_case or kebab-case.",
-      "Read the converted text in the second box.",
+      "Read the converted text in the second box. Use UPPER CASE to change text to uppercase.",
       "Use the Copy text button to take the result to your clipboard.",
     ],
     facts: [
@@ -3500,7 +3504,7 @@ export const tools: Tool[] = [
       "Type or paste a link or any text.",
       "The QR code preview updates with each change.",
       "Choose a size of 256, 512 or 1024 pixels, and an error correction level.",
-      "Download the code as a PNG or an SVG file.",
+      "Download the code as a PNG, or pick the QR code SVG download for a file that stays sharp at any size.",
     ],
     facts: [
       TEXT_PRIVACY,
@@ -3572,7 +3576,7 @@ export const tools: Tool[] = [
       "To make a password, choose a length and the character sets you want, then press Make password. The password is random, and its strength is shown in bits.",
     howItWorks: [
       "Choose a length from 8 to 128 characters. The default is 20.",
-      "Tick the character sets to use: uppercase letters, lowercase letters, numbers and symbols.",
+      "To generate password with symbols, tick the character sets to use: uppercase letters, lowercase letters, numbers and symbols.",
       "Optionally leave out characters that look alike, such as 0, O, l, 1 and I.",
       "Press Copy password to copy it, or Make new password for another one.",
     ],
@@ -3714,7 +3718,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Type or paste the text into the box.",
       "Press Encode to Base64, or press Decode from Base64.",
-      "Tick the URL-safe option if the Base64 will go into a web address.",
+      "Tick the URL safe base64 option if the result will go into a web address.",
       "Take the result with the Copy text button once it appears.",
     ],
     facts: [
@@ -3784,7 +3788,7 @@ export const tools: Tool[] = [
     howItWorks: [
       "Choose one of the three calculators on the page.",
       "Type your numbers. The answer updates as you type.",
-      "For percentage change, check whether the answer is an increase or a decrease.",
+      "With the percent change formula, the answer also says whether it is an increase or a decrease.",
       "Read the formula under the answer to see how it was worked out.",
     ],
     facts: [

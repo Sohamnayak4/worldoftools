@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { Prose } from "@/components/Prose";
 import { SITE_NAME } from "@/lib/site";
 import { CATEGORIES, tools } from "@/lib/tools";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: `About ${SITE_NAME}`,
   description:
     "worldof.tools is a free set of file tools that run in your browser. Here is how they work, which open source code they use, and how the site is paid for.",
-  alternates: { canonical: "/about" },
-};
+  path: "/about",
+});
 
 const CREDITS: { name: string; url: string; license: string; use: string }[] = [
   {
