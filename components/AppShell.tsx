@@ -1,14 +1,18 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AdSlot } from "./AdSlot";
 import { LogoMark } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
 import { SearchButton } from "./SearchButton";
 import { SearchDialog } from "./SearchDialog";
 import { SidebarNav } from "./SidebarNav";
+import { AdDialog } from "./AdDialog";
+import { AdSlots } from "./AdSlots";
+import { HideOnHome } from "./HideOnHome";
 import { ThemeToggle } from "./ThemeToggle";
 import { CategoryIcon, ToolIcon } from "./ToolIcon";
+import { MAX_SPONSORS } from "@/lib/ads";
 import { navCategories, navTools } from "@/lib/nav";
+import { getSponsors } from "@/lib/sponsors";
 import { SITE_NAME } from "@/lib/site";
 
 function Brand() {
@@ -35,12 +39,17 @@ const footerLinks = (
         Privacy
       </Link>
     </li>
+    <li>
+      <Link href="/advertise" className="text-muted no-underline hover:text-text">
+        Advertise
+      </Link>
+    </li>
   </ul>
 );
 
 // The frame around every page: a sidebar on wide screens, a top bar with a
 // menu on phones, and one search dialog for the whole site.
-export function AppShell({ children }: { children: ReactNode }) {
+export async function AppShell({ children }: { children: ReactNode }) {
   const icons: Record<string, ReactNode> = {};
   for (const tool of navTools) icons[tool.slug] = <ToolIcon slug={tool.slug} size={15} />;
   for (const category of navCategories) {
@@ -56,7 +65,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-4">
           <SidebarNav categories={navCategories} icons={icons} />
-          <AdSlot position="sidebar" reservedHeight={120} />
+          <HideOnHome>
+            <div className="mt-5 px-2">
+              <AdSlots compact />
+            </div>
+          </HideOnHome>
         </div>
         <div className="border-t border-line px-4 py-3">{footerLinks}</div>
       </aside>
@@ -77,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <SearchDialog tools={navTools} icons={icons} />
+      <AdDialog placesLeft={MAX_SPONSORS - (await getSponsors()).length} />
     </div>
   );
 }

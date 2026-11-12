@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AdSlot } from "@/components/AdSlot";
+import { AdSlots } from "@/components/AdSlots";
 import { ToolIndex } from "@/components/ToolIndex";
 import { CategoryIcon, ToolIcon } from "@/components/ToolIcon";
 import { navCategories, navTools } from "@/lib/nav";
@@ -18,7 +18,7 @@ const START_WITH = [
   "qr-code-generator",
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   const icons: Record<string, ReactNode> = {};
   for (const tool of navTools) icons[tool.slug] = <ToolIcon slug={tool.slug} size={16} />;
   for (const category of navCategories) {
@@ -49,20 +49,31 @@ export default function HomePage() {
           </li>
         ))}
       </ul>
-      <AdSlot position="featured" reservedHeight={88} />
     </section>
   );
 
   return (
     <div className="mx-auto max-w-[1120px]">
-      <h1 className="mt-10 max-w-[760px] text-4xl font-semibold leading-[1.05] sm:text-5xl lg:mt-14">
-        Free file tools that run in your browser
-      </h1>
-      <p className="mt-4 mb-8 max-w-[640px] text-lg text-muted">
-        Compress, convert and edit video, audio, images and PDFs. {tools.length}{" "}
-        tools, no account, and your files never leave your device.
-      </p>
-      <ToolIndex categories={navCategories} icons={icons} featured={startWith} />
+      <div className="mt-10 grid gap-8 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+        <div>
+          <h1 className="max-w-[760px] text-4xl font-semibold leading-[1.05] sm:text-5xl">
+            Free file tools that run in your browser
+          </h1>
+          <p className="mt-4 max-w-[640px] text-lg text-muted">
+            Compress, convert and edit video, audio, images and PDFs.{" "}
+            {tools.length} tools, no account, and your files never leave your
+            device.
+          </p>
+        </div>
+        {/* Sponsored slots: beside the headline on wide screens, below it on
+            phones, so they are visible on every device. */}
+        <div className="lg:row-span-2">
+          <AdSlots />
+        </div>
+        <div className="lg:col-start-1">
+          <ToolIndex categories={navCategories} icons={icons} featured={startWith} />
+        </div>
+      </div>
     </div>
   );
 }

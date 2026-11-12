@@ -66,8 +66,8 @@ export default function PrivacyPage() {
 
       <h2>No accounts</h2>
       <p>
-        There are no accounts, no sign-in and no email sign-up. The site does
-        not ask for your name or email address.
+        There are no accounts, no sign-in and no email sign-up. Using the
+        tools never asks for your name or email address.
       </p>
 
       <h2>Analytics</h2>
@@ -128,11 +128,24 @@ export default function PrivacyPage() {
         short-term logs to keep the service running and safe.
       </p>
 
-      <h2>Ads</h2>
+      <h2>Sponsored links</h2>
       <p>
-        No ads run on the site right now. If sponsored placements are added,
-        this page will be updated first, and they will not use tracking ad
-        networks.
+        Some spaces on the site show sponsored links, marked as sponsored.
+        They are plain links bought by advertisers. The site loads no
+        code from advertisers, uses no ad networks, and shares no visitor data
+        with advertisers. When you click a sponsored link, analytics records
+        which sponsor it was, the same way it records other links you follow.
+      </p>
+
+      <h2>Buying an ad</h2>
+      <p>
+        If you buy an ad on the advertise page, the details you type (your
+        product name, one line of text and your link) are sent to Dodo
+        Payments with your order, along with the analytics visitor ID, so the
+        sale can be matched to the visit. Dodo Payments handles the payment
+        and asks for your email address and payment details on its own page.
+        Those payment details are not shared with this site. Dodo Payments has
+        its own privacy policy.
       </p>
 
       <h2>Changes</h2>

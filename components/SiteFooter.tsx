@@ -39,6 +39,11 @@ export function SiteFooter() {
                 Privacy
               </Link>
             </li>
+            <li>
+              <Link href="/advertise" className="inline-block py-1">
+                Advertise
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

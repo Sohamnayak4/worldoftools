@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// Pages show current sponsor ads, so they refresh every 10 minutes. The Dodo
+// webhook refreshes them at once after a payment or refund.
+export const revalidate = 600;
+
 export const viewport: Viewport = {
   themeColor: "#16181d",
 };
