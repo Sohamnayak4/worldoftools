@@ -19,7 +19,8 @@ export async function fetchTraffic(): Promise<Traffic | null> {
     const response = await fetch(new URL("/api/v1/stats", host), {
       headers: { authorization: `Bearer ${key}` },
       signal: AbortSignal.timeout(4000),
-      cache: "no-store",
+      // A no-store fetch would make /api/traffic dynamic and uncached.
+      next: { revalidate: 30 },
     });
     if (!response.ok) return null;
     const data = (await response.json()) as Record<string, unknown>;
