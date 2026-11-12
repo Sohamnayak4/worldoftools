@@ -134,7 +134,9 @@ export default function PrivacyPage() {
         Some spaces on the site show sponsored links, marked as sponsored.
         They are plain links bought by advertisers. The site loads no
         code from advertisers, uses no ad networks, and shares no visitor data
-        with advertisers. When you click a sponsored link, analytics records
+        with advertisers. Each ad shows the advertiser&apos;s site icon. Our
+        server copies the icon into the page, so your browser does not
+        contact the advertiser&apos;s site unless you click the link. When you click a sponsored link, analytics records
         which sponsor it was, the same way it records other links you follow.
       </p>
 

@@ -20,6 +20,9 @@ export type Sponsor = {
   url: string;
   // One short line, 60 characters or fewer.
   text: string;
+  // The sponsor site's icon as a data URL, fetched by the server. Null if
+  // the site has none we can use.
+  icon: string | null;
   // When the ad stops showing, as an ISO date and time.
   until: string;
 };

@@ -1,6 +1,7 @@
 import DodoPayments from "dodopayments";
 import { unstable_cache } from "next/cache";
 import { AD_PLANS, MAX_SPONSORS, type Sponsor, TAKEN_DOWN } from "./ads";
+import { fetchSponsorIcon } from "./sponsorIcon";
 
 // Current ads, read from Dodo Payments. A successful payment with ad
 // details in its metadata is an ad. It runs for its plan's days from the
@@ -48,6 +49,7 @@ async function fetchSponsors(): Promise<Sponsor[]> {
           name: String(meta.ad_name ?? "").slice(0, 30),
           url: String(meta.ad_url ?? ""),
           text: String(meta.ad_text ?? "").slice(0, 60),
+          icon: null,
           until: new Date(until).toISOString(),
         },
       });
@@ -63,10 +65,14 @@ async function fetchSponsors(): Promise<Sponsor[]> {
       if (!refunded && item.sponsor.url.startsWith("https://")) live.push(item);
     }
     // First paid, first shown.
-    return live
+    const shown = live
       .sort((a, b) => a.paidAt - b.paidAt)
       .slice(0, MAX_SPONSORS)
       .map((item) => item.sponsor);
+    // Icons are fetched here, once per refresh, and cached with the list.
+    return Promise.all(
+      shown.map(async (sponsor) => ({ ...sponsor, icon: await fetchSponsorIcon(sponsor.url) })),
+    );
   } catch {
     // If Dodo cannot be reached, the slots show as free rather than breaking
     // the page. The next refresh tries again.

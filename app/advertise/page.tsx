@@ -10,7 +10,7 @@ import { tools } from "@/lib/tools";
 export const metadata: Metadata = pageMeta({
   title: `Advertise on ${SITE_NAME}`,
   description:
-    "Show your product in a sponsored spot on worldof.tools for 7 or 30 days. A plain link with your name and one line of text. No tracking.",
+    "Show your product in a sponsored spot on worldof.tools for 7 or 30 days. A plain link with your site icon, your name and one line of text. No tracking.",
   path: "/advertise",
 });
 
@@ -24,7 +24,7 @@ export default async function AdvertisePage() {
       </h1>
       <p className="mt-3 max-w-[65ch]">
         Put your product in front of people using {tools.length} free file
-        tools. Your ad is a plain link with your name and one line of text.
+        tools. Your ad is a plain link with your site icon, your name and one line of text.
         It shows in the sidebar on every page and next to the headline on the
         homepage, on phones too.
       </p>
