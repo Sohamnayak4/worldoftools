@@ -81,13 +81,20 @@ async function fromVercel(): Promise<Traffic | null> {
   }
 }
 
+// Pixelmoth's D1 limit resets at this time. Until then its answers are
+// stale or errors, so the count comes from Vercel only. After it, Pixelmoth
+// is used again on its own.
+const PIXELMOTH_BACK_AT = Date.parse("2026-11-14T00:00:00Z");
+
 export async function fetchTraffic(): Promise<Traffic | null> {
+  if (Date.now() < PIXELMOTH_BACK_AT) return fromVercel();
   // If both fail, the count is left off rather than guessed.
   return (await fromPixelmoth()) ?? (await fromVercel());
 }
 
 // Used when pages rebuild.
-export const getTraffic = unstable_cache(fetchTraffic, ["traffic"], {
+// The key changes when the source rules change, so an old cached count is not reused.
+export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v2"], {
   tags: ["traffic"],
   revalidate: TRAFFIC_REFRESH_SECONDS,
 });
