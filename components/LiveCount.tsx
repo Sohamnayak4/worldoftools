@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 
 type Field = "allTime" | "last7Days" | "last30Days";
 
-const REFRESH_MS = 30_000;
+// The number behind it changes every 5 minutes; checking every minute keeps
+// the page close to that without many requests.
+const REFRESH_MS = 60_000;
 
 // A visitor count that starts with the number in the server HTML (if any)
-// and refreshes every 30 seconds while the tab is visible. Null until a
+// and refreshes every minute while the tab is visible. Null until a
 // number is known.
 export function useLiveCount(initial: number | null, field: Field = "allTime"): number | null {
   const [value, setValue] = useState(initial);

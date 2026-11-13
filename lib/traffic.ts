@@ -20,7 +20,7 @@ export async function fetchTraffic(): Promise<Traffic | null> {
       headers: { authorization: `Bearer ${key}` },
       signal: AbortSignal.timeout(4000),
       // A no-store fetch would make /api/traffic dynamic and uncached.
-      next: { revalidate: 30 },
+      next: { revalidate: 300 },
     });
     if (!response.ok) return null;
     const data = (await response.json()) as Record<string, unknown>;

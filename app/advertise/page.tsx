@@ -36,7 +36,7 @@ export default async function AdvertisePage() {
           <LiveCount initial={traffic.allTime} /> people have visited since
           launch, <LiveCount initial={traffic.last7Days} field="last7Days" /> of
           them in the last 7 days. Counted by the site&apos;s own analytics and
-          updated every 30 seconds.
+          updated every 5 minutes.
         </p>
       )}
 
