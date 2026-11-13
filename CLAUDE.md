@@ -142,7 +142,7 @@ DO NOT
 - No fade-in or slide-up on scroll. No hover effects beyond a color change.
 - No stock illustrations, no fake testimonials, no stats counters.
   Exception decided by the owner on 2026-11-13: real visitor counts from
-  Pixelmoth, or 5,000 plus Vercel Web Analytics visitors while Pixelmoth is
+  Pixelmoth, or 5,500 plus Vercel Web Analytics visitors while Pixelmoth is
   down (lib/traffic.ts), appear as plain text above the homepage ad
   slots and on the Advertise page, to show advertisers the traffic. No
   animation, never estimated, and hidden if the count cannot be read.

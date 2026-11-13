@@ -20,9 +20,11 @@ export type Traffic = {
 // all visitor rows, which counts against Cloudflare's daily D1 limit.
 export const TRAFFIC_REFRESH_SECONDS = 1800;
 
-// The owner's figure for visitors Pixelmoth had counted before Vercel Web
-// Analytics was added on 2026-11-13. Pixelmoth's last answer was 4,951.
-const VERCEL_BASELINE = 5000;
+// Visitors before Vercel Web Analytics was added on 2026-11-13. Pixelmoth's
+// last answer was 4,951; the owner adds about 500 for the hours between
+// Pixelmoth stopping and Vercel starting, judged from the launch post's
+// view trend. An estimate, used only while Pixelmoth is down.
+const VERCEL_BASELINE = 5500;
 
 const TIMEOUT_MS = 4000;
 
