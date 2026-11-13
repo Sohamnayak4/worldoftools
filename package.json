@@ -12,6 +12,7 @@
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",
     "@mediabunny/mp3-encoder": "^1.65.2",
+    "@vercel/analytics": "^2.0.1",
     "dodopayments": "^2.62.0",
     "gifenc": "^1.0.3",
     "gifuct-js": "^2.1.2",

@@ -22,8 +22,10 @@ STACK
   The one exception, decided by the owner on 2026-11-12, is the owner's
   self-hosted Pixelmoth analytics (lib/site.ts, loaded in app/layout.tsx). It
   sets two first-party cookies: pm_vid (visitor id, 1 year) and pm_sid
-  (session id, 30 minutes). The privacy page must name both. No other
-  analytics, and no consent banner.
+  (session id, 30 minutes). The privacy page must name both. No consent
+  banner. Second exception, decided by the owner on 2026-11-13: Vercel Web
+  Analytics (cookieless, served from this domain) as a backup visitor count
+  when Pixelmoth is down. No other analytics.
 - Before using any library (ffmpeg.wasm, pdf-lib, pdf.js, HEIC decoders, WebCodecs
   helpers), read its current docs. Do not rely on memory for versions, APIs,
   or required headers.
@@ -140,7 +142,8 @@ DO NOT
 - No fade-in or slide-up on scroll. No hover effects beyond a color change.
 - No stock illustrations, no fake testimonials, no stats counters.
   Exception decided by the owner on 2026-11-13: real visitor counts from
-  Pixelmoth (lib/traffic.ts) appear as plain text above the homepage ad
+  Pixelmoth, or 5,000 plus Vercel Web Analytics visitors while Pixelmoth is
+  down (lib/traffic.ts), appear as plain text above the homepage ad
   slots and on the Advertise page, to show advertisers the traffic. No
   animation, never estimated, and hidden if the count cannot be read.
 - No headline with one word in a different color or italic.

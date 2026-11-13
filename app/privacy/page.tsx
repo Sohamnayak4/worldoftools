@@ -97,6 +97,14 @@ export default function PrivacyPage() {
         Like any website, the analytics server also receives the technical
         details every browser sends with a request, such as your IP address.
       </p>
+      <p>
+        The site also uses Vercel Web Analytics, from the company that hosts
+        the site, as a backup count. It sets no cookies. It records the page,
+        referrer, country, browser, operating system and device type, and
+        recognises a visitor only by a hash of the request that Vercel
+        discards after 24 hours. Its script loads from this site&apos;s own
+        domain.
+      </p>
 
       <h2>Cookies and storage</h2>
       <p>

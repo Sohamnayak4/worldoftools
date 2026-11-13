@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 type Field = "allTime" | "last7Days" | "last30Days";
 
-// The number behind it changes every 5 minutes; checking every minute keeps
-// the page close to that without many requests.
+// The number behind it changes every 30 minutes. Checks hit Vercel's cache,
+// never the analytics database.
 const REFRESH_MS = 60_000;
 
 // A visitor count that starts with the number in the server HTML (if any)

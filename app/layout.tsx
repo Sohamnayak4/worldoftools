@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { AppShell } from "@/components/AppShell";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
@@ -79,6 +80,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           src={PIXELMOTH_SRC}
           strategy="afterInteractive"
         />
+        {/* Vercel Web Analytics, cookieless and served from this domain. A
+            backup visitor count for when Pixelmoth is down (lib/traffic.ts). */}
+        <Analytics />
       </body>
     </html>
   );
