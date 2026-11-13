@@ -19,6 +19,8 @@ export type Traffic = {
 // How often the count is refreshed, in seconds. Every Pixelmoth count reads
 // all visitor rows, which counts against Cloudflare's daily D1 limit.
 export const TRAFFIC_REFRESH_SECONDS = 1800;
+// Vercel's analytics API does not touch D1, so its count can refresh faster.
+export const VERCEL_REFRESH_SECONDS = 300;
 
 // Visitors before Vercel Web Analytics was added on 2026-11-13. Pixelmoth's
 // last answer was 4,951; the owner adds about 500 for the hours between
@@ -67,7 +69,7 @@ async function fromVercel(): Promise<Traffic | null> {
     const response = await fetch(url, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      next: { revalidate: TRAFFIC_REFRESH_SECONDS },
+      next: { revalidate: VERCEL_REFRESH_SECONDS },
     });
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: Record<string, unknown> };
