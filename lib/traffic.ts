@@ -58,15 +58,10 @@ async function fromPixelmoth(): Promise<Traffic | null> {
   }
 }
 
-// HTTP statuses of the last Vercel calls, for /api/traffic?diag=1. Holds no
-// counts, tokens or visitor data.
-export const vercelDiag: Record<string, number | string> = {};
-
 // Vercel's visitor count, optionally only within a time window.
 async function vercelVisitors(
   window: { since?: string; until?: string } = {},
   revalidate = VERCEL_REFRESH_SECONDS,
-  label = "total",
 ): Promise<number | null> {
   const token = process.env.VERCEL_ANALYTICS_TOKEN;
   if (!token) return null;
@@ -82,12 +77,10 @@ async function vercelVisitors(
       signal: AbortSignal.timeout(TIMEOUT_MS),
       next: { revalidate },
     });
-    vercelDiag[label] = response.status;
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: Record<string, unknown> };
     return count(body.data?.visitors);
-  } catch (error) {
-    vercelDiag[label] = error instanceof Error ? error.name : "error";
+  } catch {
     return null;
   }
 }
@@ -110,14 +103,12 @@ const DAY_MS = 86_400_000;
 // Vercel Web Analytics was added, plus everyone Vercel counted until the
 // reset. The Vercel part is a closed window, so it is cached for a day.
 async function missedDuringOutage(): Promise<number> {
-  // The docs accept a timestamp in milliseconds or a date string; try both,
-  // with a start date before Vercel Web Analytics was added.
-  const endMs = String(Date.parse(OUTAGE_END));
-  const sinceMs = String(Date.parse("2026-11-12T00:00:00Z"));
-  const counted =
-    (await vercelVisitors({ since: sinceMs, until: endMs }, 3600, "outage-ms")) ??
-    (await vercelVisitors({ since: "2026-11-12T00:00:00Z", until: OUTAGE_END }, 3600, "outage-iso")) ??
-    (await vercelVisitors({ since: "2026-11-12", until: "2026-11-14" }, 3600, "outage-day"));
+  // Timestamps in milliseconds, with a start before Vercel Web Analytics was
+  // added. (An until date on its own was rejected.)
+  const counted = await vercelVisitors(
+    { since: String(Date.parse("2026-11-12T00:00:00Z")), until: String(Date.parse(OUTAGE_END)) },
+    3600,
+  );
   return VERCEL_BASELINE - PIXELMOTH_LAST_BEFORE_OUTAGE + (counted ?? 0);
 }
 

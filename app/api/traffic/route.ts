@@ -1,4 +1,4 @@
-import { fetchTraffic, TRAFFIC_REFRESH_SECONDS, VERCEL_REFRESH_SECONDS, vercelDiag } from "@/lib/traffic";
+import { fetchTraffic, TRAFFIC_REFRESH_SECONDS, VERCEL_REFRESH_SECONDS } from "@/lib/traffic";
 
 // Visitor totals for the live counts on the page. Runs on request, and
 // Vercel's edge caches each answer, however many people are on the site:
@@ -9,14 +9,8 @@ export const dynamic = "force-dynamic";
 
 const EMPTY_RETRY_SECONDS = 60;
 
-export async function GET(request: Request) {
+export async function GET() {
   const traffic = await fetchTraffic();
-  // Temporary: shows only the HTTP statuses of the Vercel calls, uncached.
-  if (new URL(request.url).searchParams.get("diag") === "1") {
-    return Response.json({ vercel: vercelDiag, source: traffic?.source ?? null }, {
-      headers: { "Cache-Control": "no-store" },
-    });
-  }
   const seconds = !traffic
     ? EMPTY_RETRY_SECONDS
     : traffic.source === "vercel"
