@@ -58,8 +58,16 @@ async function fromPixelmoth(): Promise<Traffic | null> {
   }
 }
 
-// Vercel's visitor count, optionally only up to a moment in time.
-async function vercelVisitors(until?: string, revalidate = VERCEL_REFRESH_SECONDS): Promise<number | null> {
+// HTTP statuses of the last Vercel calls, for /api/traffic?diag=1. Holds no
+// counts, tokens or visitor data.
+export const vercelDiag: Record<string, number | string> = {};
+
+// Vercel's visitor count, optionally only within a time window.
+async function vercelVisitors(
+  window: { since?: string; until?: string } = {},
+  revalidate = VERCEL_REFRESH_SECONDS,
+  label = "total",
+): Promise<number | null> {
   const token = process.env.VERCEL_ANALYTICS_TOKEN;
   if (!token) return null;
   try {
@@ -67,16 +75,19 @@ async function vercelVisitors(until?: string, revalidate = VERCEL_REFRESH_SECOND
     // The API takes the project id or name. Vercel sets VERCEL_PROJECT_ID.
     url.searchParams.set("projectId", process.env.VERCEL_PROJECT_ID || "worldoftools");
     if (process.env.VERCEL_TEAM_ID) url.searchParams.set("teamId", process.env.VERCEL_TEAM_ID);
-    if (until) url.searchParams.set("until", until);
+    if (window.since) url.searchParams.set("since", window.since);
+    if (window.until) url.searchParams.set("until", window.until);
     const response = await fetch(url, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),
       next: { revalidate },
     });
+    vercelDiag[label] = response.status;
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: Record<string, unknown> };
     return count(body.data?.visitors);
-  } catch {
+  } catch (error) {
+    vercelDiag[label] = error instanceof Error ? error.name : "error";
     return null;
   }
 }
@@ -99,7 +110,14 @@ const DAY_MS = 86_400_000;
 // Vercel Web Analytics was added, plus everyone Vercel counted until the
 // reset. The Vercel part is a closed window, so it is cached for a day.
 async function missedDuringOutage(): Promise<number> {
-  const counted = await vercelVisitors(OUTAGE_END, 86_400);
+  // The docs accept a timestamp in milliseconds or a date string; try both,
+  // with a start date before Vercel Web Analytics was added.
+  const endMs = String(Date.parse(OUTAGE_END));
+  const sinceMs = String(Date.parse("2026-11-12T00:00:00Z"));
+  const counted =
+    (await vercelVisitors({ since: sinceMs, until: endMs }, 3600, "outage-ms")) ??
+    (await vercelVisitors({ since: "2026-11-12T00:00:00Z", until: OUTAGE_END }, 3600, "outage-iso")) ??
+    (await vercelVisitors({ since: "2026-11-12", until: "2026-11-14" }, 3600, "outage-day"));
   return VERCEL_BASELINE - PIXELMOTH_LAST_BEFORE_OUTAGE + (counted ?? 0);
 }
 
@@ -127,7 +145,7 @@ export async function fetchTraffic(): Promise<Traffic | null> {
 
 // Used when pages rebuild.
 // The key changes when the source rules change, so an old cached count is not reused.
-export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v3"], {
+export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v4"], {
   tags: ["traffic"],
   revalidate: TRAFFIC_REFRESH_SECONDS,
 });
