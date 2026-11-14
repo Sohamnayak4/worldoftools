@@ -58,7 +58,8 @@ async function fromPixelmoth(): Promise<Traffic | null> {
   }
 }
 
-async function fromVercel(): Promise<Traffic | null> {
+// Vercel's visitor count, optionally only up to a moment in time.
+async function vercelVisitors(until?: string, revalidate = VERCEL_REFRESH_SECONDS): Promise<number | null> {
   const token = process.env.VERCEL_ANALYTICS_TOKEN;
   if (!token) return null;
   try {
@@ -66,37 +67,67 @@ async function fromVercel(): Promise<Traffic | null> {
     // The API takes the project id or name. Vercel sets VERCEL_PROJECT_ID.
     url.searchParams.set("projectId", process.env.VERCEL_PROJECT_ID || "worldoftools");
     if (process.env.VERCEL_TEAM_ID) url.searchParams.set("teamId", process.env.VERCEL_TEAM_ID);
+    if (until) url.searchParams.set("until", until);
     const response = await fetch(url, {
       headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      next: { revalidate: VERCEL_REFRESH_SECONDS },
+      next: { revalidate },
     });
     if (!response.ok) return null;
     const body = (await response.json()) as { data?: Record<string, unknown> };
-    const visitors = count(body.data?.visitors);
-    if (visitors === null) return null;
-    // Everyone so far arrived within the last week, so one total fits all three.
-    const total = VERCEL_BASELINE + visitors;
-    return { allTime: total, last7Days: total, last30Days: total, source: "vercel" };
+    return count(body.data?.visitors);
   } catch {
     return null;
   }
 }
 
-// Pixelmoth's D1 limit resets at this time. Until then its answers are
-// stale or errors, so the count comes from Vercel only. After it, Pixelmoth
-// is used again on its own.
-const PIXELMOTH_BACK_AT = Date.parse("2026-11-14T00:00:00Z");
+async function fromVercel(): Promise<Traffic | null> {
+  const visitors = await vercelVisitors();
+  if (visitors === null) return null;
+  // Everyone so far arrived within the last week, so one total fits all three.
+  const total = VERCEL_BASELINE + visitors;
+  return { allTime: total, last7Days: total, last30Days: total, source: "vercel" };
+}
+
+// Pixelmoth's D1 limit ran out on 2026-11-13 and reset at this time. Until
+// then the count came from Vercel only.
+const OUTAGE_END = "2026-11-14T00:00:00Z";
+const PIXELMOTH_BACK_AT = Date.parse(OUTAGE_END);
+const DAY_MS = 86_400_000;
+
+// Visitors Pixelmoth never recorded: the owner's ~500 for the hours before
+// Vercel Web Analytics was added, plus everyone Vercel counted until the
+// reset. The Vercel part is a closed window, so it is cached for a day.
+async function missedDuringOutage(): Promise<number> {
+  const counted = await vercelVisitors(OUTAGE_END, 86_400);
+  return VERCEL_BASELINE - PIXELMOTH_LAST_BEFORE_OUTAGE + (counted ?? 0);
+}
+
+// Pixelmoth's last answer before the outage (seen at 07:04 UTC on Nov 13).
+// Subtracting it from the baseline leaves the owner's estimate for the gap,
+// so the visitors Pixelmoth did record are not counted twice.
+const PIXELMOTH_LAST_BEFORE_OUTAGE = 5135;
 
 export async function fetchTraffic(): Promise<Traffic | null> {
   if (Date.now() < PIXELMOTH_BACK_AT) return fromVercel();
+  const pixelmoth = await fromPixelmoth();
   // If both fail, the count is left off rather than guessed.
-  return (await fromPixelmoth()) ?? (await fromVercel());
+  if (!pixelmoth) return fromVercel();
+  // Add back the outage visitors, and drop them from the 7 and 30 day counts
+  // once the outage falls outside those windows.
+  const missed = await missedDuringOutage();
+  const since = Date.now() - PIXELMOTH_BACK_AT;
+  return {
+    ...pixelmoth,
+    allTime: pixelmoth.allTime + missed,
+    last7Days: pixelmoth.last7Days + (since < 7 * DAY_MS ? missed : 0),
+    last30Days: pixelmoth.last30Days + (since < 30 * DAY_MS ? missed : 0),
+  };
 }
 
 // Used when pages rebuild.
 // The key changes when the source rules change, so an old cached count is not reused.
-export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v2"], {
+export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v3"], {
   tags: ["traffic"],
   revalidate: TRAFFIC_REFRESH_SECONDS,
 });
