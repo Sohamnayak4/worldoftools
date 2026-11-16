@@ -1,7 +1,7 @@
 import { Megaphone } from "lucide-react";
 import { AdSlotButton } from "./AdSlotButton";
 import { AD_PLANS, MAX_SPONSORS, type Sponsor } from "@/lib/ads";
-import { getSponsors } from "@/lib/sponsors";
+import { getShownSponsors } from "@/lib/sponsors";
 import { getTraffic } from "@/lib/traffic";
 import { LiveCount } from "./LiveCount";
 
@@ -32,7 +32,7 @@ function SponsorIcon({ sponsor, size }: { sponsor: Sponsor; size: number }) {
 // Four sponsor slots. A paid slot shows the sponsor. A free slot shows what an
 // ad would look like and opens the ad form when clicked.
 export async function AdSlots({ compact = false }: { compact?: boolean }) {
-  const [sponsors, traffic] = await Promise.all([getSponsors(), compact ? null : getTraffic()]);
+  const [sponsors, traffic] = await Promise.all([getShownSponsors(), compact ? null : getTraffic()]);
   const slots = Array.from({ length: MAX_SPONSORS }, (_, index) => sponsors[index] ?? null);
   const box = compact ? "px-3 py-2.5" : "px-4 py-3.5";
 

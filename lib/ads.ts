@@ -27,6 +27,23 @@ export type Sponsor = {
   until: string;
 };
 
+// The owner's own ads ("house ads"), placed by hand. They fill free slots
+// only: a paid ad always takes a slot first, and buying is never blocked by
+// a house ad. Each shows from `from` until `until` (ISO dates, UTC).
+export type HouseAd = Omit<Sponsor, "icon"> & { from: string };
+
+export const HOUSE_ADS: HouseAd[] = [
+  {
+    // A one week trial, to see how many clicks a slot gets.
+    id: "house-sohamlaunches-2026-11",
+    name: "SohamLaunches",
+    url: "https://sohamlaunches.com/?utm_source=worldof.tools&utm_medium=ad_slot",
+    text: "Launch your product and win the week",
+    from: "2026-11-16T00:00:00Z",
+    until: "2026-11-23T00:00:00Z",
+  },
+];
+
 // Payment ids of ads taken down by hand. Refunding a payment in Dodo also
 // removes its ad, so this list is only needed when an ad must go without a
 // refund.

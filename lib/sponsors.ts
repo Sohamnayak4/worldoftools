@@ -1,6 +1,6 @@
 import DodoPayments from "dodopayments";
 import { unstable_cache } from "next/cache";
-import { AD_PLANS, MAX_SPONSORS, type Sponsor, TAKEN_DOWN } from "./ads";
+import { AD_PLANS, HOUSE_ADS, MAX_SPONSORS, type Sponsor, TAKEN_DOWN } from "./ads";
 import { fetchSponsorIcon } from "./sponsorIcon";
 
 // Current ads, read from Dodo Payments. A successful payment with ad
@@ -86,3 +86,32 @@ export const getSponsors = unstable_cache(fetchSponsors, ["sponsors"], {
   tags: [SPONSORS_TAG],
   revalidate: 600,
 });
+
+// House ads running now, with their icons. Cached like the paid list.
+const getHouseAds = unstable_cache(
+  async (): Promise<Sponsor[]> => {
+    const now = Date.now();
+    const live = HOUSE_ADS.filter((ad) => Date.parse(ad.from) <= now && now < Date.parse(ad.until));
+    return Promise.all(
+      live.map(async (ad) => ({
+        id: ad.id,
+        name: ad.name,
+        url: ad.url,
+        text: ad.text,
+        until: ad.until,
+        icon: await fetchSponsorIcon(ad.url),
+      })),
+    );
+  },
+  ["house-ads"],
+  { tags: [SPONSORS_TAG], revalidate: 600 },
+);
+
+// What the ad slots show: paid ads first, then house ads in the slots left.
+// getSponsors stays paid-only, so it decides how many slots can be bought.
+export async function getShownSponsors(): Promise<Sponsor[]> {
+  const [paid, house] = await Promise.all([getSponsors(), getHouseAds()]);
+  const now = Date.now();
+  const running = house.filter((ad) => now < Date.parse(ad.until));
+  return [...paid, ...running].slice(0, MAX_SPONSORS);
+}
