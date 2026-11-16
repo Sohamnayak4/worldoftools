@@ -45,6 +45,16 @@ const footerLinks = (
         Advertise
       </Link>
     </li>
+    <li className="pt-2">
+      <a
+        href="https://x.com/soham_nayak04"
+        target="_blank"
+        rel="noopener"
+        className="text-muted no-underline hover:text-text"
+      >
+        Made by <span className="text-text">@soham_nayak04</span>
+      </a>
+    </li>
   </ul>
 );
 
