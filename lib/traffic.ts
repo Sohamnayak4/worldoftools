@@ -4,10 +4,10 @@ import { PIXELMOTH_SRC } from "./site";
 // Visitor counts shown to advertisers. Read on the server; the keys never
 // reach browsers.
 //
-// The source is the owner's Pixelmoth. When Pixelmoth cannot answer (its
-// free Cloudflare D1 limit ran out on 2026-11-13), the count falls back to
-// a fixed baseline plus the visitors Vercel Web Analytics has counted since
-// it was added. As soon as Pixelmoth answers again, its number is used.
+// The main source is Vercel Web Analytics: a fixed baseline for the visitors
+// before it was added, plus everyone it has counted since. The owner's
+// Pixelmoth is the backup; its free Cloudflare D1 limit ran out on 2026-11-13
+// and again on 2026-11-16, and it misses the visitors from those outages.
 
 export type Traffic = {
   allTime: number;
@@ -85,28 +85,53 @@ async function vercelVisitors(
   }
 }
 
+const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
+
+// Roughly when Vercel Web Analytics started counting. Visitors before it are
+// covered by VERCEL_BASELINE.
+const VERCEL_STARTED = Date.parse("2026-11-13T07:00:00Z");
+
+// Vercel is the main source: it has counted without a gap since it was
+// added, while Pixelmoth has gone down when its free D1 limit ran out.
 async function fromVercel(): Promise<Traffic | null> {
-  const visitors = await vercelVisitors();
-  if (visitors === null) return null;
-  // Everyone so far arrived within the last week, so one total fits all three.
-  const total = VERCEL_BASELINE + visitors;
-  return { allTime: total, last7Days: total, last30Days: total, source: "vercel" };
+  // Window starts rounded to the hour, so the cached API answers are reused.
+  const now = Math.floor(Date.now() / HOUR_MS) * HOUR_MS;
+  const windowCount = async (days: number) => {
+    const start = now - days * DAY_MS;
+    // Both ends are sent: an open-ended window was rejected for until alone.
+    const until = Math.floor(Date.now() / (5 * 60_000)) * 5 * 60_000;
+    const visitors = await vercelVisitors({
+      since: String(Math.max(start, VERCEL_STARTED - DAY_MS)),
+      until: String(until),
+    });
+    if (visitors === null) return null;
+    // The baseline visitors came before Vercel started; count them while the
+    // window still reaches back that far.
+    return visitors + (start < VERCEL_STARTED ? VERCEL_BASELINE : 0);
+  };
+  const [allTime, last7Days, last30Days] = await Promise.all([
+    vercelVisitors().then((visitors) => (visitors === null ? null : VERCEL_BASELINE + visitors)),
+    windowCount(7),
+    windowCount(30),
+  ]);
+  if (allTime === null || last7Days === null || last30Days === null) return null;
+  return { allTime, last7Days, last30Days, source: "vercel" };
 }
 
-// Pixelmoth's D1 limit ran out on 2026-11-13 and reset at this time. Until
-// then the count came from Vercel only.
+// Pixelmoth's first D1 outage ended at this time. Its visitors are added
+// back when Pixelmoth stands in for Vercel.
 const OUTAGE_END = "2026-11-14T00:00:00Z";
 const PIXELMOTH_BACK_AT = Date.parse(OUTAGE_END);
-const DAY_MS = 86_400_000;
 
-// Visitors Pixelmoth never recorded: the owner's ~500 for the hours before
-// Vercel Web Analytics was added, plus everyone Vercel counted until the
-// reset. The Vercel part is a closed window, so it is cached for a day.
+// Visitors Pixelmoth never recorded in that outage: the owner's ~500 for the
+// hours before Vercel Web Analytics was added, plus everyone Vercel counted
+// until the reset. A closed window, so it is cached for an hour.
 async function missedDuringOutage(): Promise<number> {
   // Timestamps in milliseconds, with a start before Vercel Web Analytics was
   // added. (An until date on its own was rejected.)
   const counted = await vercelVisitors(
-    { since: String(Date.parse("2026-11-12T00:00:00Z")), until: String(Date.parse(OUTAGE_END)) },
+    { since: String(Date.parse("2026-11-12T00:00:00Z")), until: String(PIXELMOTH_BACK_AT) },
     3600,
   );
   return VERCEL_BASELINE - PIXELMOTH_LAST_BEFORE_OUTAGE + (counted ?? 0);
@@ -117,13 +142,10 @@ async function missedDuringOutage(): Promise<number> {
 // so the visitors Pixelmoth did record are not counted twice.
 const PIXELMOTH_LAST_BEFORE_OUTAGE = 5135;
 
-export async function fetchTraffic(): Promise<Traffic | null> {
-  if (Date.now() < PIXELMOTH_BACK_AT) return fromVercel();
+// Backup only. Misses any later Pixelmoth outages, so it reads low.
+async function fromPixelmothWithOutage(): Promise<Traffic | null> {
   const pixelmoth = await fromPixelmoth();
-  // If both fail, the count is left off rather than guessed.
-  if (!pixelmoth) return fromVercel();
-  // Add back the outage visitors, and drop them from the 7 and 30 day counts
-  // once the outage falls outside those windows.
+  if (!pixelmoth) return null;
   const missed = await missedDuringOutage();
   const since = Date.now() - PIXELMOTH_BACK_AT;
   return {
@@ -134,9 +156,14 @@ export async function fetchTraffic(): Promise<Traffic | null> {
   };
 }
 
+export async function fetchTraffic(): Promise<Traffic | null> {
+  // If both fail, the count is left off rather than guessed.
+  return (await fromVercel()) ?? (await fromPixelmothWithOutage());
+}
+
 // Used when pages rebuild.
 // The key changes when the source rules change, so an old cached count is not reused.
-export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v4"], {
+export const getTraffic = unstable_cache(fetchTraffic, ["traffic-v5"], {
   tags: ["traffic"],
   revalidate: TRAFFIC_REFRESH_SECONDS,
 });
