@@ -1580,13 +1580,13 @@ export const tools: Tool[] = [
       "lower mp3 bitrate",
       "shrink mp3 online",
     ],
-    title: "Compress MP3, free and with no upload",
+    title: "Compress MP3 and reduce MP3 file size, free with no upload",
     h1: "Compress MP3",
     blurb: "Default 96 kbps, half the size of a 192 kbps file",
     metaDescription:
-      "Compress an MP3 in your browser by lowering its bitrate. The default is 96 kbps, and the file is never uploaded. No account needed.",
+      "Compress an MP3 and reduce its file size in your browser by lowering the bitrate. 96 kbps halves a 192 kbps file. Nothing is uploaded.",
     shortAnswer:
-      "To compress an MP3, pick the file and press Compress MP3. The tool re-encodes it at 96 kbps by default, and file size follows bitrate, so that is half the size of a 192 kbps MP3.",
+      "To compress or shrink an MP3, pick the file and press Compress MP3. The tool re-encodes it at 96 kbps by default, and file size follows bitrate, so that is half the size of a 192 kbps MP3.",
     howItWorks: [
       "Pick an MP3 from your device.",
       "Choose a lower MP3 bitrate. The default is 96 kbps.",
@@ -1603,6 +1603,10 @@ export const tools: Tool[] = [
         label: "Size rule",
         value: "File size follows bitrate, so 96 kbps is half the size of 192 kbps",
       },
+      {
+        label: "Example sizes",
+        value: "A 4 minute song is about 5.8 MB at 192 kbps, 2.9 MB at 96 kbps and 1.9 MB at 64 kbps",
+      },
       VIDEO_MAX_SIZE,
       AUDIO_BROWSERS,
     ],
@@ -1610,6 +1614,14 @@ export const tools: Tool[] = [
       {
         q: "How do I make an MP3 file smaller?",
         a: "Pick the MP3 on this page and press Compress MP3. The default of 96 kbps halves the size of a 192 kbps file.",
+      },
+      {
+        q: "How much smaller will my mp3 get?",
+        a: "Size depends only on bitrate and length. Each minute takes about 1.4 MB at 192 kbps, 0.7 MB at 96 kbps and 0.5 MB at 64 kbps. So going from 192 to 96 kbps halves the file.",
+      },
+      {
+        q: "How do I reduce mp3 file size without losing much quality?",
+        a: "For music, pick 128 kbps. It is a third smaller than 192 kbps and keeps more detail than the lower options. For speech and podcasts, 64 kbps stays clear.",
       },
       {
         q: "Which bitrate should I pick for speech?",
@@ -2543,6 +2555,7 @@ export const tools: Tool[] = [
       "resize photo in pixels",
       "make image smaller in pixels",
       "image resizer",
+      "image pixel resizer",
     ],
     title: "Resize image online, free and with no upload",
     h1: "Resize image online",
@@ -2555,7 +2568,7 @@ export const tools: Tool[] = [
       "Pick an image. The page shows a preview and the original size in pixels.",
       "Type a width or a height. Keep proportions is on by default, so the other side fills in by itself.",
       "Or press Half size or Quarter size to fill both fields at once.",
-      "Press Resize image. This image resizer redraws the picture at the new size in your browser.",
+      "Press Resize image. This image pixel resizer redraws the picture at the new size in your browser.",
       "Download the resized image.",
     ],
     facts: [
