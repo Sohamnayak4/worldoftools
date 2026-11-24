@@ -4,9 +4,11 @@
 
 export type AdPlan = { id: "7d" | "30d"; days: number; price: string };
 
+// The 30 day plan comes first: it is the one shown in the free slots and
+// picked by default in the form. The 7 day plan stays as a choice.
 export const AD_PLANS: AdPlan[] = [
+  { id: "30d", days: 30, price: "$14.99" },
   { id: "7d", days: 7, price: "$6.99" },
-  { id: "30d", days: 30, price: "$19.99" },
 ];
 
 // Ad slots shown at once. Each paid ad takes one slot for its days.
@@ -65,7 +67,7 @@ export function checkAdRequest(input: unknown):
   const name = typeof value.name === "string" ? value.name.trim() : "";
   const text = typeof value.text === "string" ? value.text.trim() : "";
   const url = typeof value.url === "string" ? value.url.trim() : "";
-  if (plan !== "7d" && plan !== "30d") return { ok: false, message: "Choose 7 or 30 days." };
+  if (plan !== "7d" && plan !== "30d") return { ok: false, message: "Choose 30 or 7 days." };
   if (name === "" || name.length > AD_LIMITS.name) {
     return { ok: false, message: `Type a name of up to ${AD_LIMITS.name} characters.` };
   }

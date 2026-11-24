@@ -5,7 +5,8 @@ import { getShownSponsors } from "@/lib/sponsors";
 import { getTraffic } from "@/lib/traffic";
 import { LiveCount } from "./LiveCount";
 
-const cheapest = AD_PLANS[0];
+// The plan shown in free slots: the first one, 30 days.
+const shownPlan = AD_PLANS[0];
 
 // The sponsor's site icon, embedded in the page by the server. Sites without
 // a usable icon get their first letter instead.
@@ -76,7 +77,7 @@ export async function AdSlots({ compact = false }: { compact?: boolean }) {
                   Your ad here
                 </span>
                 <span className={`mt-0.5 block text-muted ${compact ? "text-xs" : "text-sm"}`}>
-                  From {cheapest.price} for {cheapest.days} days
+                  {shownPlan.price} for {shownPlan.days} days
                 </span>
               </AdSlotButton>
             )}

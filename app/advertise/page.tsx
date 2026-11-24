@@ -12,7 +12,7 @@ import { tools } from "@/lib/tools";
 export const metadata: Metadata = pageMeta({
   title: `Advertise on ${SITE_NAME}`,
   description:
-    "Show your product in a sponsored spot on worldof.tools for 7 or 30 days. A plain link with your site icon, your name and one line of text. No tracking.",
+    "Show your product in a sponsored spot on worldof.tools for 30 or 7 days. A plain link with your site icon, your name and one line of text. No tracking.",
   path: "/advertise",
 });
 
@@ -64,11 +64,11 @@ export default async function AdvertisePage() {
       <section className="mt-12 max-w-[720px] border-t border-line pt-8">
         <h2 className="text-2xl font-semibold">How it works</h2>
         <ol className="mt-3 list-decimal space-y-2 pl-5">
-          <li>Choose 7 or 30 days and fill in your name, one line and your link.</li>
+          <li>Choose 30 or 7 days and fill in your name, one line and your link.</li>
           <li>Pay on the Dodo Payments page.</li>
           <li>
             Your ad goes live as soon as the payment goes through, and runs
-            for 7 or 30 days from that moment.
+            for 30 or 7 days from that moment.
           </li>
           <li>When the days are up, the slot frees up for the next ad.</li>
         </ol>
